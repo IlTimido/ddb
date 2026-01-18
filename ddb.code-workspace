@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "liveServer.settings.ignoreFiles": ["**/*.*", ".vscode/**", "**/*.scss", "**/*.sass", "**/*.ts"],
+    "liveServer.settings.port": 5501,
+    "task.allowAutomaticTasks": "on",
+    "svn.ignoreMissingSvnWarning": true,
+    "liveServer.settings.multiRootWorkspaceName": "/dist",
+    "liveServer.settings.root": "/dist",
+  },
+}
+

@@ -1,0 +1,12 @@
+# Dipendenze (PESANTISSIME, da non caricare mai)
+node_modules/
+
+# Cartella di build (viene rigenerata ogni volta, inutile online)
+dist/
+
+# File di sistema e cache
+.DS_Store
+Thumbs.db
+.eslintcache
+npm-debug.log*
+

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>DDB - Vite Version</title>
+  <meta name="title" content="DDB" />
+  <meta name="description" content="to do" />
+  <meta content="telephone=no" name="format-detection" />
+
+  <script type="module" src="./src/js/FactoryManager.js"></script>
+
+</head>
+
+<body>
+  <div class="js-to-remove" style="font-family:Open Sans; position:absolute; left:-1000px; visibility:hidden;">.</div>
+
+  <div class="loader-wrapper js-preloader">
+    <div class="loader js-loader-text">Loading...</div>
+    <div class="vhelper"></div>
+  </div>
+
+  <script type="module" src="./src/js/FactoryManager.js"></script>
+
+  <script type="module">
+    // Usando type="module", lo script attende che FactoryManager sia caricato
+    import FactoryManager from './src/js/FactoryManager.js';
+
+    function init() {
+      window.page = FactoryManager.factory("PageDefault");
+      window.page.init();
+    }
+
+    init();
+  </script>
+</body>
+
+</html>
