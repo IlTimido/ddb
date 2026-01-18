@@ -12,8 +12,8 @@ export default class Main {
     const row = Main.addRow();
     for (let i = 0; i < 5; i++) {
       const dice = new Dice();
-      const $diceEl = dice.show();
-      row.append($diceEl);
+      const diceEl = dice.show();
+      row.append(diceEl);
     }
     jQuery(".js-main").append(row);
   }

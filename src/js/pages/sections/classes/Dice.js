@@ -1,4 +1,4 @@
-import $ from "jquery";
+import jQuery from "jquery";
 
 export default class Dice {
   static faces = 6;
@@ -24,9 +24,9 @@ export default class Dice {
     asciiArt += "+-----+";
 
     // Usiamo <pre> per l'ASCII art
-    const $el = $(`<div class="dice"><pre>${asciiArt}</pre></div>`);
+    const el = jQuery(`<div class="dice"><pre>${asciiArt}</pre></div>`);
 
-    return $el;
+    return el;
   }
 
   _getAsciiPattern(val) {
