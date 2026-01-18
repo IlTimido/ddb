@@ -12,6 +12,18 @@ $resolvepath: "~";
 }
 
 
-.loader {
-  background-color: aquamarine;
+.dice {
+  display: inline-block;
+  margin: 10px;
+  vertical-align: top; // Aiuta se metti i dadi uno di fianco all'altro
+
+  pre {
+    font-family: 'Courier New', Courier, monospace; // Obbligatorio per allineare le barre verticali |
+    font-weight: bold;
+    font-size: 16px; // Una dimensione fissa aiuta a controllare la resa
+    line-height: 16px; // TRUCCO: line-height UGUALE a font-size elimina gli spazi tra le righe
+    background: #fff;
+    color: #000;
+    margin: 0; // Rimuove i margini di default del tag pre
+  }
 }

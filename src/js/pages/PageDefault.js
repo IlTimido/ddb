@@ -1,9 +1,11 @@
 import Pqp from "../3x1010/Pqp";
+import Main from "./sections/Main";
 
 export default class PageDefault {
+  main;
   init() {
     Pqp.activateRandomSeed();
-    // eslint-disable-next-line no-console
-    console.log("-->PageDefault initialized");
+    this.main = new Main();
+    this.main.init();
   }
 }
