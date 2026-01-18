@@ -15,15 +15,17 @@ $resolvepath: "~";
 .dice {
   display: inline-block;
   margin: 10px;
-  vertical-align: top; // Aiuta se metti i dadi uno di fianco all'altro
+  vertical-align: top;
 
   pre {
-    font-family: 'Courier New', Courier, monospace; // Obbligatorio per allineare le barre verticali |
+    font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
-    font-size: 16px; // Una dimensione fissa aiuta a controllare la resa
-    line-height: 16px; // TRUCCO: line-height UGUALE a font-size elimina gli spazi tra le righe
+    font-size: 18px;
+    line-height: 18px; // FONDAMENTALE: deve essere uguale al font-size per unire le linee verticali
     background: #fff;
     color: #000;
-    margin: 0; // Rimuove i margini di default del tag pre
+    border: none; // Togliamo il bordo CSS, usiamo quello ASCII
+    padding: 0; // Niente padding interno al pre per non sfasare
+    margin: 0;
   }
 }
