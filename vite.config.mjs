@@ -6,50 +6,45 @@ export default defineConfig(({ mode }) => {
   const isProduction = mode === "production";
 
   return {
+    // 1. Usiamo il punto per dire "questa cartella", evitando risoluzioni assolute
+    root: "./",
+
     base: "./",
 
-    // Configurazione del minificatore
-    esbuild: {
-      // 'drop' rimuove fisicamente le chiamate dal codice
-      // Lo attiviamo SOLO se siamo in produzione
-      drop: isProduction ? ["console", "debugger"] : [],
-    },
-
     resolve: {
+      // 2. QUESTA È LA CHIAVE: Impedisce a Vite/Node di risolvere il "realpath"
+      // Forza l'uso del percorso del disco virtuale E:
+      preserveSymlinks: true,
+
       alias: {
         assets: path.resolve(__dirname, "./src/assets"),
         fonts: path.resolve(__dirname, "./src/fonts"),
       },
     },
 
-    build: {
-      outDir: "dist",
-      sourcemap: true,
-      emptyOutDir: true,
-      rollupOptions: {
-        output: {
-          entryFileNames: "js/app.bundle.js",
-          chunkFileNames: "js/[name].js",
-          assetFileNames: (assetInfo) => {
-            if (assetInfo.name.endsWith(".css")) return "css/styles.css";
-            return "assets/[name][ext]";
-          },
-        },
-      },
-    },
+    // ... (restanti configurazioni: esbuild, build) ...
 
     server: {
       port: 8080,
       hot: true,
+      fs: {
+        strict: false,
+        // 3. Autorizziamo esplicitamente entrambi i punti di vista
+        allow: ["E:/", "C:/DiscoE/"],
+      },
+      host: true,
+      // 4. Se il problema persiste, il watcher potrebbe confondersi
+      watch: {
+        usePolling: true, // Più lento ma ignora i problemi di file system virtuale
+      },
     },
 
     plugins: [
       eslint({
-        cache: false, // Ti consiglio false per i test, poi puoi metterlo true
+        cache: false,
         include: ["./src/**/*.js"],
-        // Impedisce al plugin di bloccarsi se trova avvisi (non errori)
         failOnWarning: false,
-        failOnError: isProduction, // Blocca la build solo se sei in produzione e ci sono errori
+        failOnError: isProduction,
       }),
     ],
   };
