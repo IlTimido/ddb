@@ -12,20 +12,64 @@ $resolvepath: "~";
 }
 
 
-.dice {
-  display: inline-block;
+// Container che avvolge Dado + Bottone
+.dice-wrapper {
+  display: inline-flex; // Usa flex per allineare verticalmente dado e btn
+  flex-direction: column;
+  align-items: center;
   margin: 10px;
   vertical-align: top;
+}
+
+// Il blocco ASCII del dado
+.dice {
+  margin-bottom: 5px; // Spazio tra dado e bottone
 
   pre {
     font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
     font-size: 18px;
-    line-height: 18px; // FONDAMENTALE: deve essere uguale al font-size per unire le linee verticali
+    line-height: 18px;
     background: #fff;
     color: #000;
-    border: none; // Togliamo il bordo CSS, usiamo quello ASCII
-    padding: 0; // Niente padding interno al pre per non sfasare
+    border: none;
+    padding: 0;
     margin: 0;
+    cursor: default; // Evita il cursore di testo
+  }
+}
+
+// Il pulsante HOLD
+.btn-hold {
+  display: block;
+  width: 100%;
+  padding: 4px 0;
+  font-family: 'Open Sans', sans-serif; // O il font che preferisci
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  // Stato Default (Bianco bordo nero)
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+
+  // Stato Attivo/Premuto (Azzurro bordo azzurro testo bianco)
+  &.active {
+    background-color: #00BFFF; // DeepSkyBlue o un azzurro a tua scelta
+    border-color: #00BFFF;
+    color: #fff;
+
+    &:hover {
+      background-color: darken(#00BFFF, 10%);
+      border-color: darken(#00BFFF, 10%);
+    }
   }
 }
