@@ -21,6 +21,91 @@
 
   </div>
 
+  <div class="library" style="display: none;">
+    <button id="template_button" class="btn-main">TEMPLATE TEXT</button>
+
+    <div id="template_screen_game" class="game-container">
+
+      <header class="game-header">
+        <h1 class="js-stage-name">NOME TAPPA</h1>
+      </header>
+
+      <div class="game-grid">
+
+        <aside class="grid-col col-left">
+          <div class="panel panel-list">
+            <div class="panel-title">UPPER</div>
+            <div class="list-container js-upper-list"></div>
+          </div>
+
+          <div class="panel panel-stats js-stats-panel">
+            <div class="panel-title js-stage-name">NOME TAPPA</div>
+            <div class="stat-row">Punti richiesti: <span class="val js-score-target">0</span></div>
+            <div class="stat-row">Punti attuali: <span class="val js-score-current">0</span></div>
+            <hr class="stat-sep">
+            <div class="stat-row">Round: <span class="val js-round-current">1</span></div>
+            <div class="stat-row">Lanci rimanenti: <span class="val js-rolls-left">3</span></div>
+            <hr class="stat-sep">
+            <div class="stat-row stat-gold">Gold: <span class="val js-total-gold">0</span></div>
+          </div>
+        </aside>
+
+        <main class="grid-col col-center">
+
+          <div class="bonus-area">
+            <div class="bonus-box js-jolly-container">
+              <div class="placeholder-text">Jolly</div>
+            </div>
+            <div class="bonus-box js-consumables-container">
+              <div class="placeholder-text">Consumabili</div>
+            </div>
+          </div>
+
+          <div class="combinations-wrapper">
+            <div class="combinations-header">Combinazioni Valide</div>
+            <div class="combinations-track js-combinations-track">Tira i dadi!</div>
+          </div>
+
+          <div class="dice-area js-dice-container"></div>
+
+        </main>
+
+        <aside class="grid-col col-right">
+          <div class="panel panel-list">
+            <div class="panel-title">LOWER</div>
+            <div class="list-container js-lower-list"></div>
+          </div>
+
+          <div class="roll-area">
+            <button class="btn-roll js-btn-roll">TIRA I DADI</button>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+    <div id="template_list_entry" class="list-entry">
+      <span class="entry-name">Nome</span>
+      <span class="entry-count">(0)</span>
+    </div>
+
+    <div id="template_combo_card" class="combo-card">
+      <div class="card-header">
+        <span class="card-title">Titolo Combo</span>
+        <span class="card-type">TYPE</span>
+      </div>
+      <div class="card-body">
+        <div class="card-info level">Level <span class="js-lvl">1</span></div>
+        <div class="card-values">
+          <div class="val-row"><span class="js-chips">0</span> Chips</div>
+          <div class="val-row"><span class="js-mult">x0</span> Molt</div>
+        </div>
+        <div class="card-desc js-desc">Descrizione...</div>
+      </div>
+      <div class="card-footer">
+        <button class="btn-action js-btn-action">USA</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="./src/js/FactoryManager.js"></script>
 

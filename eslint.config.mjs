@@ -27,6 +27,7 @@ export default [
       "prefer-template": "off", // Usa il + per concatenare se preferisci [cite: 11]
       "max-len": "off", // Righe lunghe quanto vuoi [cite: 6]
       "no-undef": "error", // Questo è l'unico che serve davvero
+      "no-case-declarations": "off", // Permetti dichiarazioni in switch case [cite: 4]
     },
   },
 ];

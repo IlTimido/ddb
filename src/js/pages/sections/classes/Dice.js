@@ -4,15 +4,24 @@ export default class Dice {
   static faces = 6;
   value;
   held = false; // Stato iniziale: non bloccato
+  btn = null;
 
-  constructor() {
-    this.roll();
+  constructor(forcedValue = null) {
+    if (forcedValue !== null) {
+      this.value = forcedValue;
+    } else {
+      this.roll();
+    }
   }
 
   roll() {
     // Se il dado è bloccato, tecnicamente non dovrebbe essere "rollato" dal DiceManager,
     // ma lasciamo che sia il manager a decidere se chiamare questo metodo o no.
     this.value = Math.floor(Math.random() * Dice.faces) + 1;
+    return this.value;
+  }
+
+  getValue() {
     return this.value;
   }
 
@@ -26,7 +35,7 @@ export default class Dice {
 
   show() {
     const p = this._getAsciiPattern(this.value);
-    const dot = "o"; // o "•"
+    //const dot = "o"; // o "•"
 
     // Disegno ASCII
     let asciiArt = "┌─────┐\n";
@@ -43,6 +52,7 @@ export default class Dice {
 
     // 3. Il pulsante HOLD
     const $btn = jQuery('<button type="button" class="btn-hold">HOLD</button>');
+    this.btn = $btn;
 
     // Applichiamo lo stato visivo corrente (se stiamo ridisegnando un dado già bloccato)
     if (this.held) {
@@ -63,7 +73,7 @@ export default class Dice {
   }
 
   _getAsciiPattern(val) {
-    const dot = "o";
+    const dot = "o"; // o "•"
     const patterns = {
       1: ["   ", ` ${dot} `, "   "],
       2: [`${dot}  `, "   ", `  ${dot}`],

@@ -1,5 +1,6 @@
-$resolvepath: "~";
+@use "sass:color";
 
+$resolvepath: "~";
 
 // Open Sans
 @font-face {
@@ -11,47 +12,496 @@ $resolvepath: "~";
   font-display: swap;
 }
 
-
-// Container che avvolge Dado + Bottone
-.dice-wrapper {
-  display: inline-flex; // Usa flex per allineare verticalmente dado e btn
-  flex-direction: column;
-  align-items: center;
-  margin: 10px;
-  vertical-align: top;
+.library {
+  display: none;
 }
 
-// Il blocco ASCII del dado
-.dice {
-  margin-bottom: 5px; // Spazio tra dado e bottone
+.btn-main {
+  // Layout
+  display: inline-block; // Si allarga in base al contenuto
+  padding: 10px 24px; // Spazio interno per dare aria al testo
+  margin: 5px;
 
-  pre {
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: bold;
-    font-size: 18px;
-    line-height: 18px;
-    background: #fff;
-    color: #000;
-    border: none;
-    padding: 0;
-    margin: 0;
-    cursor: default; // Evita il cursore di testo
+  // Tipografia
+  font-family: 'Open Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 600; // Semi-bold per renderlo leggibile
+  text-align: center;
+  text-transform: uppercase; // Opzionale: rende i comandi più "autoritari"
+
+  // Stile Visivo (Verde Gradevole)
+  color: #ffffff;
+  background-color: #2E7D32; // Un verde solido, non accecante
+  border: 2px solid #2E7D32; // Bordo dello stesso colore (o leggermente diverso se vuoi stile)
+  border-radius: 6px; // Angoli smussati moderni
+
+  // Interazione
+  cursor: pointer;
+  transition: all 0.2s ease-in-out; // Animazione fluida per l'hover
+  user-select: none;
+
+  // Hover state (diventa leggermente più scuro)
+  &:hover {
+    background-color: #1B5E20;
+    border-color: #1B5E20;
+    transform: translateY(-1px); // Piccolo effetto "sollevamento"
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); // Ombretta leggera
+  }
+
+  // Active state (click)
+  &:active {
+    transform: translateY(1px); // Effetto "premuto"
+    box-shadow: none;
+  }
+
+  // Stato disabilitato (per i round passati)
+  &:disabled,
+  &.disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.7;
   }
 }
 
-// Il pulsante HOLD
+// Reset di base
+body {
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 20px;
+  font-family: 'Open Sans', sans-serif;
+  display: flex;
+  justify-content: center; // Centra tutto nello schermo
+}
+
+// Layout Principale Fisso
+.game-container {
+  width: 1280px; // Larghezza fissa Desktop
+  height: 850px; // Altezza fissa (o min-height)
+  background-color: #fff;
+  border: 2px solid #000;
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+// --- HEADER ---
+.game-header {
+  height: 60px;
+  border-bottom: 2px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    text-transform: uppercase;
+    color: #000; // MODIFICATO: Era Arancione
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+}
+
+// --- GRIGLIA 3 COLONNE ---
+.game-grid {
+  flex: 1; // Occupa tutto lo spazio rimanente
+  display: grid;
+  // Definisco le colonne: SX fissa, Centro elastico, DX fissa
+  grid-template-columns: 280px 1fr 280px;
+  grid-template-rows: 100%; // Altezza piena
+}
+
+.grid-col {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; // Spazio verticale tra i pannelli
+}
+
+// Bordi divisori tra le colonne
+.col-left {
+  border-right: 2px solid #000;
+}
+
+.col-right {
+  border-left: 2px solid #000;
+}
+
+// --- PANNELLI LATERALI (Info & Liste) ---
+.panel {
+  border: 2px solid #000;
+  padding: 10px;
+  background: #fff;
+}
+
+.panel-title {
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 2px solid #000;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  text-transform: uppercase;
+}
+
+// Lista laterale (indicatori)
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.list-entry {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 4px;
+  cursor: default; // Non cliccabile per azione, solo visuale
+
+  &.disabled {
+    text-decoration: line-through;
+    color: #ccc;
+  }
+
+  &.highlight {
+    background-color: #FFE0B2;
+    font-weight: bold;
+  }
+
+  // Match coi dadi
+}
+
+// Pannello Statistiche
+.panel-stats {
+  font-size: 16px;
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+
+  .val {
+    font-weight: 800;
+  }
+
+  .stat-sep {
+    border: none;
+    border-top: 1px dashed #999;
+    margin: 10px 0;
+  }
+
+  .stat-gold {
+    //color: #D84315;
+    font-size: 18px;
+  }
+
+  // Un colore rossiccio/oro
+}
+
+// --- COLONNA CENTRALE ---
+.col-center {
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+
+  // *** QUESTA E' LA CHIAVE MAGICA ***
+  // Dice alla colonna grid: "Puoi essere più piccola del tuo contenuto"
+  min-width: 0;
+}
+
+// Area Bonus Top (JOLLY & CONSUMABILI)
+.bonus-area {
+  display: flex;
+  gap: 15px;
+  // MODIFICATO: Aumentata altezza per dare più spazio (era 120px)
+  flex: 0 0 200px;
+  margin-bottom: 15px; // Un po' di aria sotto
+
+  .bonus-box {
+    flex: 1;
+    border: 2px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+
+    .placeholder-text {
+      color: #000; // MODIFICATO: Era arancione
+      font-weight: bold;
+      font-size: 18px;
+      text-align: center;
+      text-transform: uppercase;
+      opacity: 0.3; // Lo rendo un po' tenue per non disturbare
+    }
+  }
+}
+
+// Area Combinazioni (Scroll)
+.combinations-wrapper {
+  // Occupa lo spazio verticale rimanente nella colonna
+  flex: 1;
+  border: 2px solid #000;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden; // Tiene tutto dentro i bordi
+
+  // 1. FONDAMENTALE: Permette al flex item di restringersi sotto la larghezza del contenuto
+  min-width: 0;
+
+  .combinations-header {
+    background: #fff;
+    border-bottom: 1px solid #ccc;
+    padding: 5px;
+    text-align: center;
+    font-size: 12px;
+    color: #000;
+    font-weight: bold;
+    text-transform: uppercase;
+    flex-shrink: 0; // L'header non deve schiacciarsi
+  }
+
+  .combinations-track {
+    // 2. LAYOUT
+    display: flex;
+    align-items: flex-start; // Allinea in alto (meglio per lo scroll)
+    gap: 15px;
+    padding: 15px;
+
+    // 3. FIX SCROLL
+    width: 100%; // Forza la larghezza
+    overflow-x: auto; // Scroll orizzontale
+    overflow-y: hidden; // No scroll verticale
+
+    // 4. GESTIONE SPAZIO VERTICALE
+    // Mettiamo 'auto' così il div è alto solo quanto le carte + la scrollbar.
+    // La scrollbar sarà attaccata alle carte invece che in fondo alla pagina.
+    height: auto;
+
+    // Impedisce alle carte di andare a capo
+    flex-wrap: nowrap;
+
+    // Scrollbar styling
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #000;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #eee;
+    }
+
+    // *** IL FIX PERFECTION ***
+    // Questo pseudo-elemento crea uno spaziatore invisibile alla fine.
+    // Risolve il problema del padding destro ignorato dai browser.
+    &::after {
+      content: "";
+      display: block;
+      min-width: 15px; // Deve essere uguale al padding-left (15px)
+      height: 1px; // Basta che esista
+    }
+  }
+}
+
+// --- CARD CENTRALE (Unita e corretta) ---
+.combo-card {
+  // Dimensioni fisse
+  width: 160px;
+  min-width: 160px; // Rinforzo per evitare schiacciamenti
+
+  // FIX SCROLL: Impedisce alla card di restringersi
+  flex-shrink: 0;
+
+  border: 2px solid #000;
+  border-radius: 6px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+
+  // Margine per non tagliare l'ombra a destra o sotto durante lo scroll
+  margin-bottom: 4px;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  .card-header {
+    background: #eee;
+    padding: 8px;
+    border-bottom: 2px solid #000;
+    text-align: center;
+
+    .card-title {
+      display: block;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .card-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #666;
+    }
+  }
+
+  .card-body {
+    padding: 10px;
+    flex: 1;
+    font-size: 13px;
+
+    .card-info {
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .card-values {
+      margin-bottom: 10px;
+    }
+
+    .card-desc {
+      font-style: italic;
+      font-size: 11px;
+      color: #555;
+    }
+  }
+
+  .card-footer {
+    padding: 10px;
+    text-align: center;
+  }
+
+  .btn-action {
+    width: 100%;
+    padding: 6px;
+    border: 2px solid #000;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+
+    &:hover {
+      background: #000;
+      color: #fff;
+    }
+  }
+}
+
+// Variante per le UPPER CARD
+.combo-card.card-upper {
+  .card-header {
+    // Un grigio leggermente più scuro o tendente al bluastro/freddo per stacco
+    background-color: #d0d0d0;
+    border-bottom-color: #666;
+
+    .card-type {
+      color: #333; // Più scuro per contrasto
+      font-weight: bold;
+    }
+  }
+
+  // Opzionale: Se vuoi cambiare colore al bordo quando è upper
+  // border-color: #666;
+}
+
+// Area Dadi
+.dice-area {
+  // MODIFICATO: Ridotto leggermente o adattato se serve
+  // Prima era height fissa, lasciamola fissa ma diamo padding
+  flex: 0 0 140px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 20px;
+  padding-bottom: 10px;
+  padding-top: 15px;
+}
+
+
+
+// --- RIGHT COLUMN EXTRAS ---
+.roll-area {
+  margin-top: auto;
+  text-align: right;
+}
+
+// MODIFICATO: Stile Verde uguale a .btn-main
+.btn-roll {
+  display: inline-block;
+  width: 100%;
+  padding: 15px 0; // Altezza comoda
+
+  font-family: 'Open Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+
+  // Stile Visivo Verde
+  color: #ffffff;
+  background-color: #2E7D32;
+  border: 2px solid #2E7D32;
+  border-radius: 6px;
+
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+  box-shadow: 0 4px 0px #1B5E20; // Effetto 3D leggero sul bordo inferiore
+
+  &:hover {
+    background-color: #388E3C; // Verde leggermente più chiaro
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0px #1B5E20;
+  }
+
+  &:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0px #1B5E20;
+  }
+}
+
+/* Stili dei Dadi (Copiati dal precedente, funzionano ancora) */
+.dice-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0; // Il gap lo gestisce il container padre ora
+}
+
+.dice pre {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 18px;
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: default;
+}
+
 .btn-hold {
   display: block;
   width: 100%;
   padding: 4px 0;
-  font-family: 'Open Sans', sans-serif; // O il font che preferisci
+  font-family: 'Open Sans', sans-serif;
   font-size: 12px;
   font-weight: bold;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
-
-  // Stato Default (Bianco bordo nero)
+  margin-top: 5px;
   background-color: #fff;
   color: #000;
   border: 2px solid #000;
@@ -61,15 +511,57 @@ $resolvepath: "~";
     background-color: #f0f0f0;
   }
 
-  // Stato Attivo/Premuto (Azzurro bordo azzurro testo bianco)
   &.active {
-    background-color: #00BFFF; // DeepSkyBlue o un azzurro a tua scelta
+    background-color: #00BFFF;
     border-color: #00BFFF;
     color: #fff;
 
     &:hover {
-      background-color: darken(#00BFFF, 10%);
-      border-color: darken(#00BFFF, 10%);
+      background-color: color.adjust(#00BFFF, $lightness: -10%);
     }
+  }
+}
+
+
+
+// Container miniatura dentro la Card
+// Container miniatura dentro la Card
+.mini-dice-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; // Allinea in alto
+  width: 100%; // Occupa tutta la larghezza della card
+  height: 45px; // Altezza fissa riservata nello spazio (tarata su scale 0.5)
+  margin-top: 8px;
+  margin-bottom: 5px;
+
+  // La magia dello scale
+  // Nota: Usa top center così rimangono centrati orizzontalmente
+  transform: scale(0.35);
+  transform-origin: top center;
+
+  // Sovrascriviamo gli stili dei dadi clonati
+  .dice-wrapper {
+    margin: 0 2px !important; // Riduciamo drasticamente il gap laterale (sovrascrive style originali)
+    pointer-events: none; // Non cliccabili
+    transform: none !important; // Rimuove eventuali trasformazioni del dado originale
+    box-shadow: none !important;
+  }
+
+  // Se necessario, riduciamo anche il pre interno
+  .dice {
+    margin-bottom: 0;
+    box-shadow: none; // Rimuove ombre pesanti se presenti
+  }
+}
+
+// Assicurati che l'evidenziazione sia ben visibile anche in piccolo
+.dice-highlight {
+  pre {
+    background-color: #FFEB3B !important;
+    border-color: #FBC02D !important;
+    color: #000 !important;
+    font-weight: 900 !important; // Più grassetto per leggibilità in piccolo
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.8); // Un bagliore per farli staccare
   }
 }
