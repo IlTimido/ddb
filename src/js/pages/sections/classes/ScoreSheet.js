@@ -19,19 +19,29 @@ export default class ScoreSheet {
   static UPPER_FIVES = "UpperFives";
   static UPPER_SIXES = "UpperSixes";
 
+  // --- MODIFICATO: NUOVI VALORI BILANCIATI ---
   static LOWERS_DATA = [
+    // TIER 1: Safety
     { entry: ScoreSheet.LOWER_CHANCE, name: "Chance", description: "Somma tutti i dati.", baseMult: 1, baseChips: 5 },
     { entry: ScoreSheet.LOWER_PAIR, name: "Pair", description: "Almeno una coppia di dadi uguali.", baseMult: 2, baseChips: 10 },
-    { entry: ScoreSheet.LOWER_TWO_PAIRS, name: "Two Pairs", description: "Due coppie di dadi uguali.", baseMult: 2, baseChips: 20 },
+
+    // TIER 2: Common
+    { entry: ScoreSheet.LOWER_TWO_PAIRS, name: "Two Pairs", description: "Due coppie di dadi uguali.", baseMult: 3, baseChips: 20 },
     { entry: ScoreSheet.LOWER_THREE_OF_A_KIND, name: "Three of a Kind", description: "Almeno tre dadi uguali.", baseMult: 3, baseChips: 30 },
-    { entry: ScoreSheet.LOWER_SMALL_STRAIGHT, name: "Small Straight", description: "Quattro numeri consecutivi.", baseMult: 4, baseChips: 35 },
-    { entry: ScoreSheet.LOWER_ALL_DIFFERENT, name: "All Different", description: "Tutti i dadi con numeri diversi.", baseMult: 5, baseChips: 40 },
-    { entry: ScoreSheet.LOWER_FULL_HOUSE, name: "Full House", description: "Un tris e una coppia.", baseMult: 6, baseChips: 40 },
-    { entry: ScoreSheet.LOWER_ALL_EVEN, name: "All Even", description: "Tutti i dadi con numeri pari.", baseMult: 7, baseChips: 50 },
-    { entry: ScoreSheet.LOWER_ALL_ODD, name: "All Odd", description: "Tutti i dadi con numeri dispari.", baseMult: 7, baseChips: 50 },
-    { entry: ScoreSheet.LOWER_LARGE_STRAIGHT, name: "Large Straight", description: "Cinque numeri consecutivi.", baseMult: 8, baseChips: 60 },
-    { entry: ScoreSheet.LOWER_FOUR_OF_A_KIND, name: "Four of a Kind", description: "Almeno quattro dadi uguali.", baseMult: 10, baseChips: 80 },
-    { entry: ScoreSheet.LOWER_FIVE_OF_A_KIND, name: "Five of a Kind", description: "Tutti i dadi uguali.", baseMult: 15, baseChips: 100 },
+
+    // TIER 3: Strategy
+    { entry: ScoreSheet.LOWER_SMALL_STRAIGHT, name: "Small Straight", description: "Quattro numeri consecutivi.", baseMult: 4, baseChips: 30 },
+    { entry: ScoreSheet.LOWER_ALL_DIFFERENT, name: "All Different", description: "Tutti i dadi con numeri diversi.", baseMult: 4, baseChips: 40 },
+    { entry: ScoreSheet.LOWER_FULL_HOUSE, name: "Full House", description: "Un tris e una coppia.", baseMult: 5, baseChips: 40 },
+
+    // TIER 4: Hard
+    { entry: ScoreSheet.LOWER_ALL_EVEN, name: "All Even", description: "Tutti i dadi con numeri pari.", baseMult: 6, baseChips: 50 },
+    { entry: ScoreSheet.LOWER_ALL_ODD, name: "All Odd", description: "Tutti i dadi con numeri dispari.", baseMult: 6, baseChips: 50 },
+    { entry: ScoreSheet.LOWER_LARGE_STRAIGHT, name: "Large Straight", description: "Cinque numeri consecutivi.", baseMult: 7, baseChips: 60 },
+
+    // TIER 5: Jackpot
+    { entry: ScoreSheet.LOWER_FOUR_OF_A_KIND, name: "Four of a Kind", description: "Almeno quattro dadi uguali.", baseMult: 8, baseChips: 70 },
+    { entry: ScoreSheet.LOWER_FIVE_OF_A_KIND, name: "Five of a Kind", description: "Tutti i dadi uguali.", baseMult: 15, baseChips: 120 },
   ];
 
   static UPPERS_DATA = [
@@ -64,7 +74,6 @@ export default class ScoreSheet {
 
     // Calcoliamo i dati statistici della mano (frequenze, somme, ecc.)
     const stats = ScoreSheet._analyzeDice(values);
-
     const validMatches = [];
 
     // --- 1. CONTROLLO UPPERS ---

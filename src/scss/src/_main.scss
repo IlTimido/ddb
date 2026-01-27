@@ -565,3 +565,45 @@ body {
     box-shadow: 0 0 5px rgba(255, 193, 7, 0.8); // Un bagliore per farli staccare
   }
 }
+
+// --- SCORE REVEAL (Teatralità) ---
+.score-reveal {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 48px;
+  font-weight: 900;
+  color: #D84315;
+  margin-left: 30px;
+  display: flex;
+  align-items: center;
+
+  // FIX: Z-Index altissimo per stare sopra a tutto
+  z-index: 1000;
+  position: relative;
+
+  // Animazione Pop-in (nessuna modifica qui, va bene forwards)
+  animation: scorePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes scorePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateX(-50px);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.2); // Diventa un po' più grande
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+}
+
+// Classe helper per far sparire le carte non selezionate in modo fluido
+.fade-out-card {
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s ease-out;
+}

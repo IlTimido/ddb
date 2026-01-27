@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "pack for ai": "node makeBundle.js bundle_for_ai.txt"
   },
   "dependencies": {
     "blueimp-md5": "^2.19.0",

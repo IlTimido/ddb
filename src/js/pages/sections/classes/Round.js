@@ -2,9 +2,14 @@ import CardLower from "./CardLower";
 import CardUpper from "./CardUpper";
 import Hand from "./Hand";
 import ScoreSheet from "./ScoreSheet";
+import Player from "./Player";
+import jQuery from "jquery";
 
 export default class Round {
   static handPerRound = 5;
+  // Costante per l'attesa (5 secondi)
+  static SHOW_SCORE_DURATION = 5000;
+
   config = null;
   currentHandIndex = -1;
   statsPanel = null;
@@ -30,7 +35,6 @@ export default class Round {
 
   init() {
     this.statsPanel.setCurrentHand(this.hands.length);
-    // Il pulsante tira i dadi
     jQuery(".js-btn-roll", this.clip).on("click", this.onRollDice.bind(this));
   }
 
@@ -41,7 +45,6 @@ export default class Round {
   nextHand() {
     this.currentHandIndex++;
     const hand = new Hand(this.clip, this.handleResults.bind(this), this.previousDices);
-
     hand.init();
     this.hands.push(hand);
   }
@@ -49,7 +52,6 @@ export default class Round {
   handleResults(dices) {
     console.log("Risultati mano:", dices);
     this.previousDices = dices;
-    // Incrementa le mani giocate
     this.state.handsPlayed++;
     this.statsPanel.setCurrentHand(this.state.handsPlayed);
 
@@ -57,32 +59,30 @@ export default class Round {
     $track.empty();
 
     if (this.state.handsPlayed >= this.config.handsPerRound) {
-      // Nasconde il pulsante tira i dadi
-      jQuery(".js-btn-roll", this.clip).off("click");
-      jQuery(".js-btn-roll", this.clip).hide();
-      //console.log("Round finito");
-      // Nasconde anche i pulsanti hold sui dadi
-      for (let i = 0; i < dices.length; i++) {
-        const diceObj = dices[i];
-        diceObj.dice.btn.hide();
-      }
+      jQuery(".js-btn-roll", this.clip).off("click").hide();
+      dices.forEach((dObj) => dObj.dice.btn.hide());
     }
-    // Valuta quali sono le combinazioni che fittano in questa mano
+
     this.lowers.clearHighlights();
     this.uppers.clearHighlights();
+
     const validMatches = ScoreSheet.evaluateHand(dices, this.lowers, this.uppers);
+
     validMatches.forEach((match) => {
       let $cardElement = null;
 
+      // Definiamo la callback che ora accetta anche $cardElement
+      const onSelectCallback = (matchData, staticData, $cardElement) => {
+        this.onCardSelected(matchData, staticData, $cardElement);
+      };
+
       if (match.type === "lower") {
-        const cardLower = new CardLower(match, dices);
+        const cardLower = new CardLower(match, dices, onSelectCallback);
         $cardElement = cardLower.create();
-        // Highlight lista laterale
         this.lowers.highlight(match.category, true);
       } else if (match.type === "upper") {
-        const cardUpper = new CardUpper(match); // Non servono i dadi qui
+        const cardUpper = new CardUpper(match, onSelectCallback);
         $cardElement = cardUpper.create();
-        // Highlight lista laterale (assumendo tu abbia uppers.highlight simile a lowers)
         this.uppers.highlight(match.category, true);
       }
 
@@ -90,5 +90,75 @@ export default class Round {
         $track.append($cardElement);
       }
     });
+  }
+
+  /**
+   * Gestisce il click su una carta con teatralità
+   */
+  onCardSelected(matchData, staticData, $selectedCard) {
+    console.log("Carta selezionata:", matchData.category);
+
+    // 1. CALCOLO PUNTEGGIO
+    let total = 0;
+    if (matchData.type === "lower") {
+      const chips = staticData.baseChips + matchData.score;
+      const mult = staticData.baseMult;
+      total = chips * mult;
+    } else {
+      total = matchData.score;
+    }
+
+    // 2. AGGIORNA STATO GLOBALE
+    Player.totalScore += total;
+    this.state.score += total;
+    jQuery(".js-score-current", this.clip).text(this.state.score);
+
+    // Disabilita nella lista laterale
+    if (matchData.type === "lower") {
+      const clip = this.lowers.getClip(matchData.category);
+      if (clip) clip.addClass("disabled").removeClass("highlight");
+    } else {
+      const clip = this.uppers.getClip(matchData.category);
+      if (clip) clip.addClass("disabled").removeClass("highlight");
+    }
+
+    // --- FASE TEATRALE ---
+
+    // A. Nascondi pulsante Tira Dadi e Hold
+    this.clip.find(".js-btn-roll").hide();
+    this.clip.find(".btn-hold").hide();
+
+    // B. Rimuovi tutte le altre carte
+    $selectedCard.siblings().addClass("fade-out-card");
+
+    // Rimuovile dal DOM dopo 300ms (tempo transizione CSS)
+    setTimeout(() => {
+      $selectedCard.siblings().remove();
+    }, 300);
+
+    // C. Disabilita interazione sulla carta scelta
+    const $btnAction = $selectedCard.find(".js-btn-action");
+    $btnAction.prop("disabled", true).text(matchData.type === "lower" ? "USATA" : "PRESA");
+    $selectedCard.addClass("selected-locked");
+
+    // D. Mostra il Punteggione (RITARDATO)
+    // Facciamo passare 600ms totali: 300ms per sparire le altre + 300ms di "silenzio" in cui si vede solo la carta scelta.
+    setTimeout(() => {
+      const $scoreDisplay = jQuery(`<div class="score-reveal">+${total}</div>`);
+      this.clip.find(".js-combinations-track").append($scoreDisplay);
+    }, 600);
+
+    // E. Attendi e chiudi
+    // Aggiungiamo i 600ms di ritardo al tempo totale di attesa
+    console.log(`Attendo il reveal...`);
+    setTimeout(() => {
+      this.endRound();
+    }, Round.SHOW_SCORE_DURATION + 600);
+  }
+
+  endRound() {
+    // Per ora alert, poi faremo la logica vera
+    alert("Round Concluso! Punti fatti: " + this.state.score);
+    // Qui chiameremo this.stage.nextRound()
   }
 }

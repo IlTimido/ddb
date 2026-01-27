@@ -2,15 +2,12 @@ import jQuery from "jquery";
 import ScoreSheet from "./ScoreSheet.js";
 
 export default class CardLower {
-  /**
-   * @param {Object} matchData - Dati dal calcolatore { category, score, indices }
-   * @param {Object[]} allDiceObjects - Array originale dei dadi [{dice: Obj, element: jQuery}]
-   */
-  constructor(matchData, allDiceObjects) {
+  // Aggiungiamo onSelect come terzo parametro
+  constructor(matchData, allDiceObjects, onSelect) {
     this.matchData = matchData;
     this.allDiceObjects = allDiceObjects;
+    this.onSelect = onSelect; // Salviamo il riferimento
 
-    // Recupera i dati statici (mult, chips base, nome)
     this.staticData = ScoreSheet.LOWERS_DATA.find((d) => d.entry === matchData.category);
   }
 
@@ -20,29 +17,25 @@ export default class CardLower {
       return jQuery("");
     }
 
-    // 1. Clona il template
     const $card = jQuery("#template_combo_card").clone().removeAttr("id");
 
-    // 2. Popola Testi
     $card.find(".card-title").text(this.staticData.name);
     $card.find(".card-type").text("LOWER");
     $card.find(".js-lvl").text("1");
     $card.find(".js-desc").text(this.staticData.description);
 
-    // Chips e Mult (Base)
-    // Nota: qui metto i baseChips statici. Se vuoi sommare il punteggio dei dadi
-    // ai chips, modifica qui sotto: this.staticData.baseChips + this.matchData.score
+    // Mostriamo i valori base. Il calcolo vero lo faremo nel Round.
     $card.find(".js-chips").text(this.staticData.baseChips);
     $card.find(".js-mult").text(this.staticData.baseMult);
 
-    // 3. Gestione Pulsante USA
+    // Gestione Click
     $card.find(".js-btn-action").on("click", () => {
-      console.log(`Usato: ${this.staticData.name}`);
-      // Qui emetteremo un evento o chiameremo una callback per dire al Round che è finita
-      // es. document.dispatchEvent(new CustomEvent('card-selected', { detail: this.matchData }));
+      // Chiamiamo la funzione del Round passando i dati e i dati statici
+      if (this.onSelect) {
+        this.onSelect(this.matchData, this.staticData, $card);
+      }
     });
 
-    // 4. MINIATURA DADI (Il punto B)
     this._renderMiniDice($card);
 
     return $card;
@@ -51,33 +44,24 @@ export default class CardLower {
   _renderMiniDice($card) {
     // Creiamo il contenitore per i dadi mini
     const $miniContainer = jQuery('<div class="mini-dice-container"></div>');
+    const winIndices = this.matchData.indices || [];
 
-    // Iteriamo sui dadi originali per clonarli
     this.allDiceObjects.forEach((diceObj, index) => {
-      // diceObj.element è il wrapper .dice-wrapper esistente
-      // Lo cloniamo
       const $clone = diceObj.element.clone();
-
-      // PULIZIA PROFONDA
       $clone.find(".btn-hold").remove();
-      $clone.removeAttr("id"); // Rimuovi ID dal wrapper
-      $clone.find("*").removeAttr("id"); // Rimuovi ID dai figli
-
-      // Rimuovi eventuali stili inline che jQuery potrebbe aver aggiunto (es. display: none/block)
+      $clone.removeAttr("id");
+      $clone.find("*").removeAttr("id");
       $clone.removeAttr("style");
       $clone.find("*").removeAttr("style");
 
-      // Verifica se questo indice è tra quelli vincenti
-      if (this.matchData.indices.includes(index)) {
-        // Applica classe per evidenziare (sul div .dice o sul pre)
+      if (winIndices.includes(index)) {
         $clone.find(".dice").addClass("dice-highlight");
+      } else {
+        // Opzionale: rendi i dadi non usati semi-trasparenti
+        // $clone.css("opacity", "0.3");
       }
-
       $miniContainer.append($clone);
     });
-
-    // Appendiamo il mini container nel corpo della card, prima della descrizione
-    // o dopo i valori, a tua scelta. Qui lo metto dopo i valori.
     $card.find(".card-values").after($miniContainer);
   }
 }

@@ -1,0 +1,1912 @@
+BUNDLE GENERATED AT: 2026-01-27T13:08:22.880Z
+ROOT: E:\3x1010\Projects-2026\ddb
+INCLUDES: index.html + src/** (recursive)
+
+
+===== FILE: index.html =====
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>DDB - Vite Version</title>
+  <meta name="title" content="DDB" />
+  <meta name="description" content="to do" />
+  <meta content="telephone=no" name="format-detection" />
+
+  <script type="module" src="./src/js/FactoryManager.js"></script>
+
+</head>
+
+<body>
+  <div class="js-to-remove" style="font-family:Open Sans; position:absolute; left:-1000px; visibility:hidden;">.</div>
+  <div class="main js-main">
+
+  </div>
+
+  <div class="library" style="display: none;">
+    <button id="template_button" class="btn-main">TEMPLATE TEXT</button>
+
+    <div id="template_screen_game" class="game-container">
+
+      <header class="game-header">
+        <h1 class="js-stage-name">NOME TAPPA</h1>
+      </header>
+
+      <div class="game-grid">
+
+        <aside class="grid-col col-left">
+          <div class="panel panel-list">
+            <div class="panel-title">UPPER</div>
+            <div class="list-container js-upper-list"></div>
+          </div>
+
+          <div class="panel panel-stats js-stats-panel">
+            <div class="panel-title js-stage-name">NOME TAPPA</div>
+            <div class="stat-row">Punti richiesti: <span class="val js-score-target">0</span></div>
+            <div class="stat-row">Punti attuali: <span class="val js-score-current">0</span></div>
+            <hr class="stat-sep">
+            <div class="stat-row">Round: <span class="val js-round-current">1</span></div>
+            <div class="stat-row">Lanci rimanenti: <span class="val js-rolls-left">3</span></div>
+            <hr class="stat-sep">
+            <div class="stat-row stat-gold">Gold: <span class="val js-total-gold">0</span></div>
+          </div>
+        </aside>
+
+        <main class="grid-col col-center">
+
+          <div class="bonus-area">
+            <div class="bonus-box js-jolly-container">
+              <div class="placeholder-text">Jolly</div>
+            </div>
+            <div class="bonus-box js-consumables-container">
+              <div class="placeholder-text">Consumabili</div>
+            </div>
+          </div>
+
+          <div class="combinations-wrapper">
+            <div class="combinations-header">Combinazioni Valide</div>
+            <div class="combinations-track js-combinations-track">Tira i dadi!</div>
+          </div>
+
+          <div class="dice-area js-dice-container"></div>
+
+        </main>
+
+        <aside class="grid-col col-right">
+          <div class="panel panel-list">
+            <div class="panel-title">LOWER</div>
+            <div class="list-container js-lower-list"></div>
+          </div>
+
+          <div class="roll-area">
+            <button class="btn-roll js-btn-roll">TIRA I DADI</button>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+    <div id="template_list_entry" class="list-entry">
+      <span class="entry-name">Nome</span>
+      <span class="entry-count">(0)</span>
+    </div>
+
+    <div id="template_combo_card" class="combo-card">
+      <div class="card-header">
+        <span class="card-title">Titolo Combo</span>
+        <span class="card-type">TYPE</span>
+      </div>
+      <div class="card-body">
+        <div class="card-info level">Level <span class="js-lvl">1</span></div>
+        <div class="card-values">
+          <div class="val-row"><span class="js-chips">0</span> Chips</div>
+          <div class="val-row"><span class="js-mult">x0</span> Molt</div>
+        </div>
+        <div class="card-desc js-desc">Descrizione...</div>
+      </div>
+      <div class="card-footer">
+        <button class="btn-action js-btn-action">USA</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/js/FactoryManager.js"></script>
+
+  <script type="module">
+    // Usando type="module", lo script attende che FactoryManager sia caricato
+    import FactoryManager from './src/js/FactoryManager.js';
+
+    function init() {
+      window.page = FactoryManager.factory("PageDefault");
+      window.page.init();
+    }
+
+    init();
+  </script>
+</body>
+
+</html>
+===== END FILE: index.html =====
+
+
+===== FILE: src/fonts/OpenSans-Regular.woff =====
+[SKIPPED: extension not allowed]
+===== END FILE: src/fonts/OpenSans-Regular.woff =====
+
+
+===== FILE: src/fonts/OpenSans-Regular.woff2 =====
+[SKIPPED: extension not allowed]
+===== END FILE: src/fonts/OpenSans-Regular.woff2 =====
+
+
+===== FILE: src/js/FactoryManager.js =====
+import "../scss/styles.scss";
+import jQuery from "jquery";
+import PageDefault from "./pages/PageDefault";
+
+// jQuery non dipende da FactoryManager, quindi può stare qui
+window.jQuery = window.$ = jQuery;
+
+// 1. Definiamo la classe
+export default class FactoryManager {
+  static factory(cls) {
+    return new FactoryManager.classes[cls]();
+  }
+}
+
+// 2. ORA che la classe esiste, aggiungiamo le proprietà statiche
+FactoryManager.classes = { PageDefault };
+
+// 3. E infine esponiamola a window per l'HTML
+window.FactoryManager = FactoryManager;
+===== END FILE: src/js/FactoryManager.js =====
+
+
+===== FILE: src/js/pages/PageDefault.js =====
+import Pqp from "../3x1010/Pqp";
+import Main from "./sections/Main";
+
+export default class PageDefault {
+  main;
+  init() {
+    Pqp.activateRandomSeed();
+    this.main = new Main();
+    this.main.init();
+  }
+}
+===== END FILE: src/js/pages/PageDefault.js =====
+
+
+===== FILE: src/js/pages/sections/classes/CardLower.js =====
+import jQuery from "jquery";
+import ScoreSheet from "./ScoreSheet.js";
+
+export default class CardLower {
+  /**
+   * @param {Object} matchData - Dati dal calcolatore { category, score, indices }
+   * @param {Object[]} allDiceObjects - Array originale dei dadi [{dice: Obj, element: jQuery}]
+   */
+  constructor(matchData, allDiceObjects) {
+    this.matchData = matchData;
+    this.allDiceObjects = allDiceObjects;
+
+    // Recupera i dati statici (mult, chips base, nome)
+    this.staticData = ScoreSheet.LOWERS_DATA.find((d) => d.entry === matchData.category);
+  }
+
+  create() {
+    if (!this.staticData) {
+      console.error("Dati statici non trovati per", this.matchData.category);
+      return jQuery("");
+    }
+
+    // 1. Clona il template
+    const $card = jQuery("#template_combo_card").clone().removeAttr("id");
+
+    // 2. Popola Testi
+    $card.find(".card-title").text(this.staticData.name);
+    $card.find(".card-type").text("LOWER");
+    $card.find(".js-lvl").text("1");
+    $card.find(".js-desc").text(this.staticData.description);
+
+    // Chips e Mult (Base)
+    // Nota: qui metto i baseChips statici. Se vuoi sommare il punteggio dei dadi
+    // ai chips, modifica qui sotto: this.staticData.baseChips + this.matchData.score
+    $card.find(".js-chips").text(this.staticData.baseChips);
+    $card.find(".js-mult").text(this.staticData.baseMult);
+
+    // 3. Gestione Pulsante USA
+    $card.find(".js-btn-action").on("click", () => {
+      console.log(`Usato: ${this.staticData.name}`);
+      // Qui emetteremo un evento o chiameremo una callback per dire al Round che è finita
+      // es. document.dispatchEvent(new CustomEvent('card-selected', { detail: this.matchData }));
+    });
+
+    // 4. MINIATURA DADI (Il punto B)
+    this._renderMiniDice($card);
+
+    return $card;
+  }
+
+  _renderMiniDice($card) {
+    // Creiamo il contenitore per i dadi mini
+    const $miniContainer = jQuery('<div class="mini-dice-container"></div>');
+
+    // Iteriamo sui dadi originali per clonarli
+    this.allDiceObjects.forEach((diceObj, index) => {
+      // diceObj.element è il wrapper .dice-wrapper esistente
+      // Lo cloniamo
+      const $clone = diceObj.element.clone();
+
+      // PULIZIA PROFONDA
+      $clone.find(".btn-hold").remove();
+      $clone.removeAttr("id"); // Rimuovi ID dal wrapper
+      $clone.find("*").removeAttr("id"); // Rimuovi ID dai figli
+
+      // Rimuovi eventuali stili inline che jQuery potrebbe aver aggiunto (es. display: none/block)
+      $clone.removeAttr("style");
+      $clone.find("*").removeAttr("style");
+
+      // Verifica se questo indice è tra quelli vincenti
+      if (this.matchData.indices.includes(index)) {
+        // Applica classe per evidenziare (sul div .dice o sul pre)
+        $clone.find(".dice").addClass("dice-highlight");
+      }
+
+      $miniContainer.append($clone);
+    });
+
+    // Appendiamo il mini container nel corpo della card, prima della descrizione
+    // o dopo i valori, a tua scelta. Qui lo metto dopo i valori.
+    $card.find(".card-values").after($miniContainer);
+  }
+}
+===== END FILE: src/js/pages/sections/classes/CardLower.js =====
+
+
+===== FILE: src/js/pages/sections/classes/CardUpper.js =====
+import jQuery from "jquery";
+import ScoreSheet from "./ScoreSheet.js";
+
+export default class CardUpper {
+  /**
+   * @param {Object} matchData - { category, score, tier }
+   */
+  constructor(matchData) {
+    this.matchData = matchData;
+
+    // Recupera i dati statici
+    this.staticData = ScoreSheet.UPPERS_DATA.find((d) => d.entry === matchData.category);
+  }
+
+  create() {
+    if (!this.staticData) return jQuery("");
+
+    // 1. Clona il template
+    const $card = jQuery("#template_combo_card").clone().removeAttr("id");
+
+    // 2. Aggiungi una classe specifica per lo stile (es. header grigio diverso)
+    $card.addClass("card-upper");
+
+    // 3. Calcolo testi in base al Tier
+    // matchData.tier è 0 o 1.
+    // Tier 0 -> Label "Tier 1" -> Descrizione tier0
+    // Tier 1 -> Label "Tier 2" -> Descrizione tier1
+    const displayTier = this.matchData.tier + 1;
+    const descriptionText = this.matchData.tier === 1 ? this.staticData.tier1 : this.staticData.tier0;
+
+    // 4. Popola Header
+    $card.find(".card-title").text(this.staticData.name);
+    $card.find(".card-type").text("UPPER"); // Label Type
+
+    // 5. Popola Body
+    // Sostituiamo "Level" con "Tier" nella label se vuoi, o usiamo la struttura esistente
+    $card.find(".card-info").html(`Tier <span class="js-lvl">${displayTier}</span>`);
+
+    // Valori: Le Upper solitamente non danno Molt, ma danno Chips (somma dadi) + Effetto
+    // Nascondiamo la riga del Molt se è 0 o non pertinente, oppure lasciamo standard
+    $card.find(".js-chips").text(this.matchData.score);
+    $card.find(".js-mult").parent().hide(); // Nascondiamo il moltiplicatore per le Upper se non serve
+
+    // Descrizione dell'effetto speciale
+    $card.find(".js-desc").text(descriptionText);
+
+    // 6. Pulsante AZIONE
+    const $btn = $card.find(".js-btn-action");
+
+    // *** MODIFICA: Testo specifico per Upper ***
+    $btn.text("OTTIENI");
+
+    $btn.on("click", () => {
+      console.log(`Ottieni Upper: ${this.staticData.name} (Tier ${displayTier})`);
+      // Qui aggiungeremo la logica di gioco
+    });
+
+    return $card;
+  }
+}
+===== END FILE: src/js/pages/sections/classes/CardUpper.js =====
+
+
+===== FILE: src/js/pages/sections/classes/Dice.js =====
+import jQuery from "jquery";
+
+export default class Dice {
+  static faces = 6;
+  value;
+  held = false; // Stato iniziale: non bloccato
+  btn = null;
+
+  constructor(forcedValue = null) {
+    if (forcedValue !== null) {
+      this.value = forcedValue;
+    } else {
+      this.roll();
+    }
+  }
+
+  roll() {
+    // Se il dado è bloccato, tecnicamente non dovrebbe essere "rollato" dal DiceManager,
+    // ma lasciamo che sia il manager a decidere se chiamare questo metodo o no.
+    this.value = Math.floor(Math.random() * Dice.faces) + 1;
+    return this.value;
+  }
+
+  getValue() {
+    return this.value;
+  }
+
+  toggleHold() {
+    this.held = !this.held;
+  }
+
+  isHeld() {
+    return this.held;
+  }
+
+  show() {
+    const p = this._getAsciiPattern(this.value);
+    //const dot = "o"; // o "•"
+
+    // Disegno ASCII
+    let asciiArt = "┌─────┐\n";
+    asciiArt += `│ ${p[0]} │\n`;
+    asciiArt += `│ ${p[1]} │\n`;
+    asciiArt += `│ ${p[2]} │\n`;
+    asciiArt += "└─────┘";
+
+    // 1. Creiamo un container per allineare dado e bottone in verticale
+    const $container = jQuery('<div class="dice-wrapper"></div>');
+
+    // 2. Il dado vero e proprio
+    const $visual = jQuery(`<div class="dice"><pre>${asciiArt}</pre></div>`);
+
+    // 3. Il pulsante HOLD
+    const $btn = jQuery('<button type="button" class="btn-hold">HOLD</button>');
+    this.btn = $btn;
+
+    // Applichiamo lo stato visivo corrente (se stiamo ridisegnando un dado già bloccato)
+    if (this.held) {
+      $btn.addClass("active");
+    }
+
+    // Gestione Click
+    $btn.on("click", () => {
+      this.toggleHold(); // Aggiorna lo stato logico (true/false)
+      $btn.toggleClass("active"); // Aggiorna lo stato visivo (colore)
+    });
+
+    // Assembliamo il tutto
+    $container.append($visual);
+    $container.append($btn);
+
+    return $container;
+  }
+
+  _getAsciiPattern(val) {
+    const dot = "o"; // o "•"
+    const patterns = {
+      1: ["   ", ` ${dot} `, "   "],
+      2: [`${dot}  `, "   ", `  ${dot}`],
+      3: [`${dot}  `, ` ${dot} `, `  ${dot}`],
+      4: [`${dot} ${dot}`, "   ", `${dot} ${dot}`],
+      5: [`${dot} ${dot}`, ` ${dot} `, `${dot} ${dot}`],
+      6: [`${dot} ${dot}`, `${dot} ${dot}`, `${dot} ${dot}`],
+    };
+    return patterns[val] || patterns[1];
+  }
+}
+===== END FILE: src/js/pages/sections/classes/Dice.js =====
+
+
+===== FILE: src/js/pages/sections/classes/Hand.js =====
+import Dice from "./Dice";
+
+export default class Hand {
+  clip = null;
+  callback = null;
+  dices = [];
+  previousDices = [];
+  constructor(clip, callback, previousDices = []) {
+    this.clip = jQuery(".js-dice-container", clip);
+    this.clip.empty();
+    this.callback = callback;
+    this.previousDices = previousDices;
+  }
+
+  init() {
+    this.launchDices();
+  }
+
+  launchDices() {
+    //  this.clip = Rower.create();
+    for (let i = 0; i < 5; i++) {
+      // Controlla se il previousDices ha un hold su questo dado
+      const previousDice = this.previousDices ? this.previousDices[i] : null;
+      if (previousDice && previousDice.dice.held) {
+        // Riutilizza il valore del dado precedente
+        const dice = new Dice(previousDice.dice.getValue());
+        dice.held = true; // Mantieni lo stato hold
+        const diceEl = dice.show();
+
+        this.clip.append(diceEl);
+        this.dices.push({ dice: dice, element: diceEl });
+      } else {
+        const dice = new Dice();
+        const diceEl = dice.show();
+        this.clip.append(diceEl);
+        this.dices.push({ dice: dice, element: diceEl });
+      }
+    }
+    this.callback(this.dices);
+  }
+}
+===== END FILE: src/js/pages/sections/classes/Hand.js =====
+
+
+===== FILE: src/js/pages/sections/classes/Lowers.js =====
+import jQuery from "jquery";
+import ScoreSheet from "./ScoreSheet.js"; // Importiamo per accedere ai dati statici
+
+export default class Lowers {
+  /**
+   * @param {jQuery} $context - Il contenitore principale dello Stage (this.clip)
+   * @param {string[]} lowersList - Array di stringhe (es. ["LowerChance", "LowerPair"])
+   */
+  constructor($context, lowersList) {
+    this.$context = $context;
+    this.dataList = lowersList;
+
+    // Trova il contenitore specifico all'interno del contesto
+    this.$container = this.$context.find(".js-lower-list");
+
+    // Array dove salveremo gli oggetti { entry: "LowerPair", clip: jQueryObject }
+    this.items = [];
+  }
+
+  init() {
+    this._render();
+  }
+
+  _render() {
+    // 1. Pulisce il contenitore
+    this.$container.empty();
+    this.items = [];
+
+    // 2. Conta le occorrenze
+    const counts = this.dataList.reduce((acc, curr) => {
+      acc[curr] = (acc[curr] || 0) + 1;
+      return acc;
+    }, {});
+
+    // 3. Itera sulle chiavi e crea i clip
+    Object.keys(counts).forEach((entryName) => {
+      const count = counts[entryName];
+      this._createItem(entryName, count);
+    });
+  }
+
+  _createItem(entryName, count) {
+    // Clona il template
+    const $el = jQuery("#template_list_entry").clone().removeAttr("id");
+
+    // --- MODIFICA 1: DECODIFICA NOME ---
+    // Cerca l'oggetto corrispondente in ScoreSheet.LOWERS_DATA
+    const staticData = ScoreSheet.LOWERS_DATA.find((d) => d.entry === entryName);
+
+    // Se lo trova usa il .name (es. "Pair"), altrimenti usa l'ID grezzo come fallback
+    const displayName = staticData ? staticData.name : entryName;
+
+    // Popola i dati visivi
+    $el.find(".entry-name").text(displayName);
+    $el.find(".entry-count").text(`(${count})`);
+
+    // Aggiunge al DOM
+    this.$container.append($el);
+
+    // Salva il riferimento
+    this.items.push({
+      entry: entryName,
+      clip: $el,
+    });
+  }
+
+  /**
+   * Restituisce il clip jQuery associato al nome della entry
+   * @param {string} entryName
+   * @returns {jQuery|null}
+   */
+  getClip(entryName) {
+    const found = this.items.find((item) => item.entry === entryName);
+    return found ? found.clip : null;
+  }
+
+  // --- MODIFICA 2: GESTIONE HIGHLIGHT ---
+
+  /**
+   * Attiva o disattiva l'evidenziazione per una specifica entry
+   * @param {string} entryName - L'ID della entry (es. ScoreSheet.LOWER_PAIR)
+   * @param {boolean} enable - true per accendere, false per spegnere
+   */
+  highlight(entryName, enable = true) {
+    const item = this.items.find((i) => i.entry === entryName);
+    if (item) {
+      if (enable) {
+        item.clip.addClass("highlight");
+      } else {
+        item.clip.removeClass("highlight");
+      }
+    }
+  }
+
+  /**
+   * Rimuove l'evidenziazione da TUTTE le voci della lista
+   */
+  clearHighlights() {
+    this.items.forEach((item) => {
+      item.clip.removeClass("highlight");
+    });
+  }
+}
+===== END FILE: src/js/pages/sections/classes/Lowers.js =====
+
+
+===== FILE: src/js/pages/sections/classes/Player.js =====
+export default class Player {
+  static totalScore = 0;
+  static gold = 0;
+  static jollies = [];
+  static consumables = [];
+}
+===== END FILE: src/js/pages/sections/classes/Player.js =====
+
+
+===== FILE: src/js/pages/sections/classes/Round.js =====
+import CardLower from "./CardLower";
+import CardUpper from "./CardUpper";
+import Hand from "./Hand";
+import ScoreSheet from "./ScoreSheet";
+
+export default class Round {
+  static handPerRound = 5;
+  config = null;
+  currentHandIndex = -1;
+  statsPanel = null;
+  roundNumber = 0;
+  clip = null;
+  state = {
+    score: 0,
+    handsPlayed: 0,
+  };
+  hands = [];
+  previousDices = null;
+  lowers = null;
+  uppers = null;
+
+  constructor(roundNumber, statsPanel, clip, config, lowers, uppers) {
+    this.roundNumber = roundNumber;
+    this.statsPanel = statsPanel;
+    this.clip = clip;
+    this.config = config;
+    this.lowers = lowers;
+    this.uppers = uppers;
+  }
+
+  init() {
+    this.statsPanel.setCurrentHand(this.hands.length);
+    // Il pulsante tira i dadi
+    jQuery(".js-btn-roll", this.clip).on("click", this.onRollDice.bind(this));
+  }
+
+  onRollDice() {
+    this.nextHand();
+  }
+
+  nextHand() {
+    this.currentHandIndex++;
+    const hand = new Hand(this.clip, this.handleResults.bind(this), this.previousDices);
+
+    hand.init();
+    this.hands.push(hand);
+  }
+
+  handleResults(dices) {
+    console.log("Risultati mano:", dices);
+    this.previousDices = dices;
+    // Incrementa le mani giocate
+    this.state.handsPlayed++;
+    this.statsPanel.setCurrentHand(this.state.handsPlayed);
+
+    const $track = this.clip.find(".js-combinations-track");
+    $track.empty();
+
+    if (this.state.handsPlayed >= this.config.handsPerRound) {
+      // Nasconde il pulsante tira i dadi
+      jQuery(".js-btn-roll", this.clip).off("click");
+      jQuery(".js-btn-roll", this.clip).hide();
+      //console.log("Round finito");
+      // Nasconde anche i pulsanti hold sui dadi
+      for (let i = 0; i < dices.length; i++) {
+        const diceObj = dices[i];
+        diceObj.dice.btn.hide();
+      }
+    }
+    // Valuta quali sono le combinazioni che fittano in questa mano
+    this.lowers.clearHighlights();
+    this.uppers.clearHighlights();
+    const validMatches = ScoreSheet.evaluateHand(dices, this.lowers, this.uppers);
+    validMatches.forEach((match) => {
+      let $cardElement = null;
+
+      if (match.type === "lower") {
+        const cardLower = new CardLower(match, dices);
+        $cardElement = cardLower.create();
+        // Highlight lista laterale
+        this.lowers.highlight(match.category, true);
+      } else if (match.type === "upper") {
+        const cardUpper = new CardUpper(match); // Non servono i dadi qui
+        $cardElement = cardUpper.create();
+        // Highlight lista laterale (assumendo tu abbia uppers.highlight simile a lowers)
+        this.uppers.highlight(match.category, true);
+      }
+
+      if ($cardElement) {
+        $track.append($cardElement);
+      }
+    });
+  }
+}
+===== END FILE: src/js/pages/sections/classes/Round.js =====
+
+
+===== FILE: src/js/pages/sections/classes/Route.js =====
+import Stage from "./Stage";
+
+export default class Route {
+  stage = null;
+  currentStageIndex = 0;
+  config = null;
+  stages = [];
+
+  constructor(config) {
+    this.config = config;
+    this.stages = config.stages;
+  }
+
+  init() {
+    this.stage = new Stage(this.stages[this.currentStageIndex]);
+    this.stage.init();
+  }
+}
+===== END FILE: src/js/pages/sections/classes/Route.js =====
+
+
+===== FILE: src/js/pages/sections/classes/Run.js =====
+import Route from "./Route";
+import ScoreSheet from "./ScoreSheet";
+
+export default class Run {
+  route = null;
+  currentRouteIndex = 0;
+  constructor() {}
+
+  init() {
+    this.route = new Route(config.routes[this.currentRouteIndex]);
+    this.route.init();
+  }
+}
+
+const config = {
+  routes: [
+    {
+      name: "Beginner Route",
+      stages: [
+        {
+          name: "Stage 1",
+          toBeat: 120,
+          lowers: ScoreSheet.getAllLowers(),
+          uppers: ScoreSheet.getAllUppers(),
+          rules: [],
+          rounds: 5,
+          handsPerRound: 3,
+        },
+      ],
+    },
+  ],
+};
+===== END FILE: src/js/pages/sections/classes/Run.js =====
+
+
+===== FILE: src/js/pages/sections/classes/ScoreSheet.js =====
+export default class ScoreSheet {
+  static LOWER_CHANCE = "LowerChance";
+  static LOWER_PAIR = "LowerPair";
+  static LOWER_TWO_PAIRS = "LowerTwoPairs";
+  static LOWER_THREE_OF_A_KIND = "LowerThreeOfAKind";
+  static LOWER_SMALL_STRAIGHT = "LowerSmallStraight";
+  static LOWER_ALL_DIFFERENT = "LowerAllDifferent";
+  static LOWER_FULL_HOUSE = "LowerFullHouse";
+  static LOWER_ALL_EVEN = "LowerAllEven";
+  static LOWER_ALL_ODD = "LowerAllOdd";
+  static LOWER_LARGE_STRAIGHT = "LowerLargeStraight";
+  static LOWER_FOUR_OF_A_KIND = "LowerFourOfAKind";
+  static LOWER_FIVE_OF_A_KIND = "LowerFiveOfAKind";
+
+  static UPPER_ONES = "UpperOnes";
+  static UPPER_TWOS = "UpperTwos";
+  static UPPER_THREES = "UpperThrees";
+  static UPPER_FOURS = "UpperFours";
+  static UPPER_FIVES = "UpperFives";
+  static UPPER_SIXES = "UpperSixes";
+
+  static LOWERS_DATA = [
+    { entry: ScoreSheet.LOWER_CHANCE, name: "Chance", description: "Somma tutti i dati.", baseMult: 1, baseChips: 5 },
+    { entry: ScoreSheet.LOWER_PAIR, name: "Pair", description: "Almeno una coppia di dadi uguali.", baseMult: 2, baseChips: 10 },
+    { entry: ScoreSheet.LOWER_TWO_PAIRS, name: "Two Pairs", description: "Due coppie di dadi uguali.", baseMult: 2, baseChips: 20 },
+    { entry: ScoreSheet.LOWER_THREE_OF_A_KIND, name: "Three of a Kind", description: "Almeno tre dadi uguali.", baseMult: 3, baseChips: 30 },
+    { entry: ScoreSheet.LOWER_SMALL_STRAIGHT, name: "Small Straight", description: "Quattro numeri consecutivi.", baseMult: 4, baseChips: 35 },
+    { entry: ScoreSheet.LOWER_ALL_DIFFERENT, name: "All Different", description: "Tutti i dadi con numeri diversi.", baseMult: 5, baseChips: 40 },
+    { entry: ScoreSheet.LOWER_FULL_HOUSE, name: "Full House", description: "Un tris e una coppia.", baseMult: 6, baseChips: 40 },
+    { entry: ScoreSheet.LOWER_ALL_EVEN, name: "All Even", description: "Tutti i dadi con numeri pari.", baseMult: 7, baseChips: 50 },
+    { entry: ScoreSheet.LOWER_ALL_ODD, name: "All Odd", description: "Tutti i dadi con numeri dispari.", baseMult: 7, baseChips: 50 },
+    { entry: ScoreSheet.LOWER_LARGE_STRAIGHT, name: "Large Straight", description: "Cinque numeri consecutivi.", baseMult: 8, baseChips: 60 },
+    { entry: ScoreSheet.LOWER_FOUR_OF_A_KIND, name: "Four of a Kind", description: "Almeno quattro dadi uguali.", baseMult: 10, baseChips: 80 },
+    { entry: ScoreSheet.LOWER_FIVE_OF_A_KIND, name: "Five of a Kind", description: "Tutti i dadi uguali.", baseMult: 15, baseChips: 100 },
+  ];
+
+  static UPPERS_DATA = [
+    { entry: ScoreSheet.UPPER_ONES, name: "Ones", description: "Somma dei dadi con valore 1.", tier0: "Un tiro extra in qualunque round.", tier1: "Un tiro extra in qualunque tappa." },
+    { entry: ScoreSheet.UPPER_TWOS, name: "Twos", description: "Somma dei dadi con valore 2.", tier0: "Ogni round incrementa il valore di 1, venduta automticamente a fine tappa.", tier1: "Ogni tappa incrementa il valore di 1, venduta automaticamente a fine percorso." },
+    { entry: ScoreSheet.UPPER_THREES, name: "Threes", description: "Somma dei dadi con valore 3.", tier0: "Aggiunge 2 categorie Lower casuali alla tappa corrente.", tier1: "Aggiunge 2 categorie Lower scelte dal giocatore alla tappa corrente." },
+    { entry: ScoreSheet.UPPER_FOURS, name: "Fours", description: "Somma dei dadi con valore 4.", tier0: "+30 chips per ogni dado del valore 4 che esce in questo round.", tier1: "+30 chips per ogni dado del valore 4 che esce nel round in cui si gioca questa Upper." },
+    { entry: ScoreSheet.UPPER_FIVES, name: "Fives", description: "Somma dei dadi con valore 5.", tier0: "+5 mult al punteggio totale di questo round.", tier1: "+5 mult al punteggio totale del round in cui si gioca questa Upper." },
+    { entry: ScoreSheet.UPPER_SIXES, name: "Sixes", description: "Somma dei dadi con valore 6.", tier0: "+50 chips al punteggio totale di questo round.", tier1: "+50 chips al punteggio totale del round in cui si gioca questa Upper." },
+  ];
+
+  static getAllLowers() {
+    return [ScoreSheet.LOWER_CHANCE, ScoreSheet.LOWER_PAIR, ScoreSheet.LOWER_TWO_PAIRS, ScoreSheet.LOWER_THREE_OF_A_KIND, ScoreSheet.LOWER_SMALL_STRAIGHT, ScoreSheet.LOWER_ALL_DIFFERENT, ScoreSheet.LOWER_FULL_HOUSE, ScoreSheet.LOWER_ALL_EVEN, ScoreSheet.LOWER_ALL_ODD, ScoreSheet.LOWER_LARGE_STRAIGHT, ScoreSheet.LOWER_FOUR_OF_A_KIND, ScoreSheet.LOWER_FIVE_OF_A_KIND];
+  }
+
+  static getAllUppers() {
+    return [ScoreSheet.UPPER_ONES, ScoreSheet.UPPER_TWOS, ScoreSheet.UPPER_THREES, ScoreSheet.UPPER_FOURS, ScoreSheet.UPPER_FIVES, ScoreSheet.UPPER_SIXES];
+  }
+
+  /**
+   * FASE 1: Valutazione della mano.
+   * Analizza i dadi e le liste disponibili per trovare le combinazioni valide.
+   * * @param {Array} dices - Array [{dice: Obj, element: jQuery}, ...]
+   * @param {Lowers} lowersManager - Istanza della classe Lowers
+   * @param {Uppers} uppersManager - Istanza della classe Uppers
+   * @returns {Array} Array di oggetti match: { category: string, type: 'lower'|'upper', score: number, description: string }
+   */
+  static evaluateHand(dices, lowersManager, uppersManager) {
+    const values = dices.map((d) => d.dice.value); // Estraiamo solo i numeri [1, 3, 3, 5, 6]
+
+    // Calcoliamo i dati statistici della mano (frequenze, somme, ecc.)
+    const stats = ScoreSheet._analyzeDice(values);
+
+    const validMatches = [];
+
+    // --- 1. CONTROLLO UPPERS ---
+    // Iteriamo sulle entry che il giocatore HA effettivamente nella sua lista
+    uppersManager.items.forEach((item) => {
+      const category = item.entry; // Es. "Ones", "Twos"
+
+      // Calcola il punteggio (o controlla validità) per questa categoria
+      const result = ScoreSheet._checkUpper(category, stats);
+
+      if (result.isValid) {
+        validMatches.push({
+          category: category,
+          type: "upper",
+          score: result.score, // Es. Somma dei dadi di quel numero
+          tier: result.tier,
+          // Qui potremmo aggiungere altre info per la card (es. "Level 1")
+        });
+      }
+    });
+
+    // --- 2. CONTROLLO LOWERS ---
+    lowersManager.items.forEach((item) => {
+      const category = item.entry; // Es. "Full House"
+
+      // Calcola validità per questa categoria
+      const result = ScoreSheet._checkLower(category, stats);
+
+      if (result.isValid) {
+        validMatches.push({
+          category: category,
+          type: "lower",
+          score: result.score,
+          indices: result.indices,
+          // Aggiungiamo un flag per dire se è un match "esatto" o parziale se serve
+        });
+      }
+    });
+
+    return validMatches;
+  }
+
+  // ==========================================
+  // HELPERS LOGICI (Privati)
+  // ==========================================
+
+  /**
+   * Crea un oggetto con le statistiche dei dadi per facilitare i controlli
+   */
+  static _analyzeDice(values) {
+    const counts = {}; // Mappa frequenze: { 1: 0, 2: 3, ... }
+    let sum = 0;
+
+    // Inizializza a 0
+    for (let i = 1; i <= 6; i++) counts[i] = 0;
+
+    values.forEach((v) => {
+      counts[v]++;
+      sum += v;
+    });
+
+    // Array delle frequenze (es. [0, 2, 3, 0, 0, 0] per un Full House di 2 e 3)
+    const frequencies = Object.values(counts);
+    // Valori unici ordinati (per le scale)
+    const uniqueSorted = [...new Set(values)].sort((a, b) => a - b);
+
+    return { values, counts, sum, frequencies, uniqueSorted };
+  }
+
+  static _checkUpper(category, stats) {
+    let targetNum = 0;
+
+    switch (category) {
+      case ScoreSheet.UPPER_ONES:
+        targetNum = 1;
+        break;
+      case ScoreSheet.UPPER_TWOS:
+        targetNum = 2;
+        break;
+      case ScoreSheet.UPPER_THREES:
+        targetNum = 3;
+        break;
+      case ScoreSheet.UPPER_FOURS:
+        targetNum = 4;
+        break;
+      case ScoreSheet.UPPER_FIVES:
+        targetNum = 5;
+        break;
+      case ScoreSheet.UPPER_SIXES:
+        targetNum = 6;
+        break;
+      default:
+        return { isValid: false, score: 0 };
+    }
+
+    const count = stats.counts[targetNum];
+
+    // LOGICA TIER:
+    // 2 o 3 dadi = Tier 0 (Visualizzato come Tier 1)
+    // 4 o 5 dadi = Tier 1 (Visualizzato come Tier 2)
+
+    if (count >= 2) {
+      const tier = count >= 4 ? 1 : 0;
+      return { isValid: true, score: count * targetNum, tier: tier };
+    }
+
+    return { isValid: false, score: 0 };
+  }
+
+  static _checkLower(category, stats) {
+    const f = stats.frequencies;
+    const v = stats.values; // Array originale dei valori [es. 1, 3, 3, 5, 6]
+    let isValid = false;
+    let score = 0;
+    let indices = []; // Qui salveremo gli indici dei dadi da colorare
+
+    switch (category) {
+      case ScoreSheet.LOWER_CHANCE:
+        isValid = true;
+        score = stats.sum;
+        indices = [0, 1, 2, 3, 4]; // Tutti validi
+        break;
+
+      case ScoreSheet.LOWER_PAIR:
+        // Trova il numero che compare >= 2 volte (partendo dal più alto)
+        const pairVal = ScoreSheet._findValueByFrequency(stats, 2);
+        isValid = pairVal > 0;
+        if (isValid) {
+          score = ScoreSheet._getNOfAKindScore(stats, 2);
+          indices = ScoreSheet._getIndicesForVal(v, pairVal, 2); // Prendi 2 dadi con quel valore
+        }
+        break;
+
+      case ScoreSheet.LOWER_TWO_PAIRS:
+        // Logica un po' più complessa: trovare due numeri diversi con count >= 2
+        const pairs = [];
+        for (let i = 6; i >= 1; i--) {
+          if (stats.counts[i] >= 2) pairs.push(i);
+        }
+        isValid = pairs.length >= 2;
+        if (isValid) {
+          score = stats.sum; // O regola specifica
+          // Prendi i primi due dadi della prima coppia e i primi due della seconda
+          const idx1 = ScoreSheet._getIndicesForVal(v, pairs[0], 2);
+          const idx2 = ScoreSheet._getIndicesForVal(v, pairs[1], 2);
+          indices = [...idx1, ...idx2];
+        }
+        break;
+
+      case ScoreSheet.LOWER_THREE_OF_A_KIND:
+        const threeVal = ScoreSheet._findValueByFrequency(stats, 3);
+        isValid = threeVal > 0;
+        if (isValid) {
+          score = stats.sum;
+          indices = ScoreSheet._getIndicesForVal(v, threeVal, 3);
+        }
+        break;
+
+      case ScoreSheet.LOWER_FOUR_OF_A_KIND:
+        const fourVal = ScoreSheet._findValueByFrequency(stats, 4);
+        isValid = fourVal > 0;
+        if (isValid) {
+          score = stats.sum;
+          indices = ScoreSheet._getIndicesForVal(v, fourVal, 4);
+        }
+        break;
+
+      case ScoreSheet.LOWER_FIVE_OF_A_KIND:
+        const fiveVal = ScoreSheet._findValueByFrequency(stats, 5);
+        isValid = fiveVal > 0;
+        if (isValid) {
+          score = 50;
+          indices = [0, 1, 2, 3, 4];
+        }
+        break;
+
+      case ScoreSheet.LOWER_FULL_HOUSE:
+        const tripla = ScoreSheet._findValueByFrequency(stats, 3);
+        // Cerca la coppia (che non sia la tripla stessa, nel caso di 5 uguali che valgono come full)
+        let coppia = 0;
+        for (let i = 6; i >= 1; i--) {
+          if (stats.counts[i] >= 2 && i !== tripla) coppia = i;
+        }
+
+        isValid = tripla > 0 && coppia > 0;
+        if (isValid) {
+          score = 25;
+          indices = [...ScoreSheet._getIndicesForVal(v, tripla, 3), ...ScoreSheet._getIndicesForVal(v, coppia, 2)];
+        }
+        break;
+
+      case ScoreSheet.LOWER_SMALL_STRAIGHT:
+        const seqSmall = ScoreSheet._getStraightSequence(stats.uniqueSorted, 4);
+        isValid = seqSmall.length === 4;
+        if (isValid) {
+          score = 30;
+          indices = ScoreSheet._getIndicesForSequence(v, seqSmall);
+        }
+        break;
+
+      case ScoreSheet.LOWER_LARGE_STRAIGHT:
+        const seqLarge = ScoreSheet._getStraightSequence(stats.uniqueSorted, 5);
+        isValid = seqLarge.length === 5;
+        if (isValid) {
+          score = 40;
+          indices = ScoreSheet._getIndicesForSequence(v, seqLarge);
+        }
+        break;
+
+      case ScoreSheet.LOWER_ALL_DIFFERENT:
+        isValid = stats.uniqueSorted.length === 5;
+        if (isValid) {
+          score = stats.sum;
+          indices = [0, 1, 2, 3, 4];
+        }
+        break;
+
+      case ScoreSheet.LOWER_ALL_EVEN:
+        isValid = stats.values.every((val) => val % 2 === 0);
+        if (isValid) {
+          score = stats.sum;
+          indices = [0, 1, 2, 3, 4];
+        }
+        break;
+
+      case ScoreSheet.LOWER_ALL_ODD:
+        isValid = stats.values.every((val) => val % 2 !== 0);
+        if (isValid) {
+          score = stats.sum;
+          indices = [0, 1, 2, 3, 4];
+        }
+        break;
+    }
+
+    return { isValid, score, indices };
+  }
+
+  // --- NUOVI HELPER ---
+
+  static _findValueByFrequency(stats, n) {
+    for (let i = 6; i >= 1; i--) {
+      if (stats.counts[i] >= n) return i;
+    }
+    return 0;
+  }
+
+  // Restituisce gli indici dei dadi che hanno un certo valore (limitato a 'count' occorrenze)
+  static _getIndicesForVal(allValues, targetVal, countNeeded) {
+    const found = [];
+    allValues.forEach((v, idx) => {
+      if (v === targetVal && found.length < countNeeded) {
+        found.push(idx);
+      }
+    });
+    return found;
+  }
+
+  // Restituisce la sequenza di numeri (es. [1,2,3,4]) se esiste
+  static _getStraightSequence(uniqueSorted, lengthRequired) {
+    if (uniqueSorted.length < lengthRequired) return [];
+    let currentSeq = [uniqueSorted[0]];
+
+    for (let i = 0; i < uniqueSorted.length - 1; i++) {
+      if (uniqueSorted[i + 1] === uniqueSorted[i] + 1) {
+        currentSeq.push(uniqueSorted[i + 1]);
+      } else {
+        if (currentSeq.length >= lengthRequired) return currentSeq;
+        currentSeq = [uniqueSorted[i + 1]];
+      }
+    }
+    return currentSeq.length >= lengthRequired ? currentSeq.slice(0, lengthRequired) : [];
+  }
+
+  // Mappa una sequenza di valori (es [1,2,3,4]) agli indici originali dei dadi
+  static _getIndicesForSequence(allValues, sequence) {
+    const indices = [];
+    const usedIndices = new Set();
+
+    sequence.forEach((targetVal) => {
+      // Trova il primo indice di questo valore che non abbiamo ancora usato
+      const idx = allValues.findIndex((v, i) => v === targetVal && !usedIndices.has(i));
+      if (idx !== -1) {
+        usedIndices.add(idx);
+        indices.push(idx);
+      }
+    });
+    return indices;
+  }
+
+  // Calcola somma per N of a Kind (prende il valore più alto se ce ne sono più di uno)
+  static _getNOfAKindScore(stats, n) {
+    // Trova il numero più alto che appare almeno n volte
+    for (let i = 6; i >= 1; i--) {
+      if (stats.counts[i] >= n) {
+        return i * n;
+      }
+    }
+    return 0;
+  }
+
+  // Algoritmo generico per le scale
+  static _checkStraight(uniqueSorted, lengthRequired) {
+    if (uniqueSorted.length < lengthRequired) return false;
+
+    let consecutive = 1;
+    for (let i = 0; i < uniqueSorted.length - 1; i++) {
+      // Se il prossimo numero è esattamente attuale + 1
+      if (uniqueSorted[i + 1] === uniqueSorted[i] + 1) {
+        consecutive++;
+      } else {
+        consecutive = 1; // Reset se sequenza rotta
+      }
+      if (consecutive >= lengthRequired) return true;
+    }
+    return consecutive >= lengthRequired;
+  }
+}
+===== END FILE: src/js/pages/sections/classes/ScoreSheet.js =====
+
+
+===== FILE: src/js/pages/sections/classes/Stage.js =====
+import Lowers from "./Lowers";
+import Player from "./Player";
+import Round from "./Round";
+import StatsPanel from "./StatsPanel";
+import Uppers from "./Uppers";
+
+export default class Stage {
+  clip = null;
+  statsPanel = null;
+  config = null;
+  currentRoundIndex = -1;
+  rounds = [];
+  lowers = [];
+  uppers = [];
+
+  constructor(config) {
+    this.config = config;
+  }
+
+  init() {
+    this.createStageScreen();
+    this.nextRound();
+  }
+
+  nextRound() {
+    this.currentRoundIndex++;
+    const round = new Round(this.currentRoundIndex, this.statsPanel, this.clip, this.config, this.lowers, this.uppers);
+    this.rounds.push(round);
+    round.init();
+  }
+
+  createStageScreen() {
+    console.log(this.config);
+    this.clip = jQuery("#template_screen_game").clone();
+    this.clip.removeAttr("id");
+    jQuery(".js-main").append(this.clip);
+    // Nome tappa
+    jQuery(".js-stage-name", this.clip).text(this.config.name);
+    this.statsPanel = new StatsPanel(jQuery(".js-stats-panel", this.clip));
+    this.statsPanel.init(this.config, this.rounds);
+    // Inizializza lowers e uppers
+    this.lowers = new Lowers(this.clip, this.config.lowers.slice());
+    this.lowers.init();
+    this.uppers = new Uppers(this.clip, this.config.uppers.slice());
+    this.uppers.init();
+    // Inizializza i gold
+    jQuery(".js-total-gold", this.clip).text(Player.gold);
+  }
+}
+===== END FILE: src/js/pages/sections/classes/Stage.js =====
+
+
+===== FILE: src/js/pages/sections/classes/StatsPanel.js =====
+export default class StatsPanel {
+  clip = null;
+  config = null;
+
+  constructor(clip) {
+    this.clip = clip;
+  }
+
+  init(config, rounds) {
+    this.config = config;
+    jQuery(".js-round-current", this.clip).text(rounds.length + 1 + "/" + config.rounds);
+    jQuery(".js-score-target", this.clip).text(config.toBeat);
+    // Segna i punti attuali
+    let currentScore = 0;
+    for (let i = 0; i < rounds.length; i++) {
+      const round = rounds[i];
+      currentScore += round.state.score;
+    }
+    jQuery(".js-score-current", this.clip).text(currentScore);
+  }
+
+  setCurrentHand(handIndex) {
+    jQuery(".js-rolls-left", this.clip).text(this.config.handsPerRound - handIndex);
+  }
+}
+===== END FILE: src/js/pages/sections/classes/StatsPanel.js =====
+
+
+===== FILE: src/js/pages/sections/classes/Uppers.js =====
+import jQuery from "jquery";
+import ScoreSheet from "./ScoreSheet.js"; // Importiamo per accedere ai dati statici
+
+export default class Uppers {
+  /**
+   * @param {jQuery} $context - Il contenitore principale dello Stage
+   * @param {string[]} uppersList - Array di stringhe (es. ["UpperOnes", "UpperTwos"])
+   */
+  constructor($context, uppersList) {
+    this.$context = $context;
+    this.dataList = uppersList;
+
+    this.$container = this.$context.find(".js-upper-list");
+    this.items = [];
+  }
+
+  init() {
+    this._render();
+  }
+
+  _render() {
+    this.$container.empty();
+    this.items = [];
+
+    // Iteriamo sulla lista delle Upper possedute
+    this.dataList.forEach((entryName) => {
+      this._createItem(entryName);
+    });
+  }
+
+  _createItem(entryName) {
+    const $el = jQuery("#template_list_entry").clone().removeAttr("id");
+
+    // --- MODIFICA 1: DECODIFICA NOME ---
+    // Cerca l'oggetto corrispondente in ScoreSheet.UPPERS_DATA
+    const staticData = ScoreSheet.UPPERS_DATA.find((d) => d.entry === entryName);
+
+    // Se lo trova usa il .name (es. "Ones"), altrimenti usa l'ID grezzo come fallback
+    const displayName = staticData ? staticData.name : entryName;
+
+    $el.find(".entry-name").text(displayName);
+
+    // Nelle Upper non mostriamo il contatore
+    $el.find(".entry-count").text("");
+
+    this.$container.append($el);
+
+    this.items.push({
+      entry: entryName,
+      clip: $el,
+    });
+  }
+
+  /**
+   * Restituisce il clip jQuery associato al nome della entry
+   * @param {string} entryName
+   * @returns {jQuery|null}
+   */
+  getClip(entryName) {
+    const found = this.items.find((item) => item.entry === entryName);
+    return found ? found.clip : null;
+  }
+
+  // --- MODIFICA 2: GESTIONE HIGHLIGHT ---
+
+  /**
+   * Attiva o disattiva l'evidenziazione per una specifica entry
+   * @param {string} entryName - L'ID della entry (es. ScoreSheet.UPPER_ONES)
+   * @param {boolean} enable - true per accendere, false per spegnere
+   */
+  highlight(entryName, enable = true) {
+    const item = this.items.find((i) => i.entry === entryName);
+    if (item) {
+      if (enable) {
+        item.clip.addClass("highlight");
+      } else {
+        item.clip.removeClass("highlight");
+      }
+    }
+  }
+
+  /**
+   * Rimuove l'evidenziazione da TUTTE le voci della lista
+   */
+  clearHighlights() {
+    this.items.forEach((item) => {
+      item.clip.removeClass("highlight");
+    });
+  }
+}
+===== END FILE: src/js/pages/sections/classes/Uppers.js =====
+
+
+===== FILE: src/js/pages/sections/helpers/Ui.js =====
+export default class Ui {
+  static createButton(label, target = null) {
+    const button = jQuery("#template_button").clone();
+    button.removeAttr("id");
+    button.text(label);
+    if (target) {
+      target.append(button);
+    }
+    return button;
+  }
+}
+===== END FILE: src/js/pages/sections/helpers/Ui.js =====
+
+
+===== FILE: src/js/pages/sections/Main.js =====
+import jQuery from "jquery";
+import Run from "./classes/Run";
+
+export default class Main {
+  run = null;
+  constructor() {}
+
+  init() {
+    this.run = new Run();
+    this.run.init();
+  }
+}
+===== END FILE: src/js/pages/sections/Main.js =====
+
+
+===== FILE: src/scss/src/_main.scss =====
+@use "sass:color";
+
+$resolvepath: "~";
+
+// Open Sans
+@font-face {
+  font-family: 'Open Sans';
+  src: url('../fonts/OpenSans-Regular.woff2') format('woff2'),
+    url('../fonts/OpenSans-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.library {
+  display: none;
+}
+
+.btn-main {
+  // Layout
+  display: inline-block; // Si allarga in base al contenuto
+  padding: 10px 24px; // Spazio interno per dare aria al testo
+  margin: 5px;
+
+  // Tipografia
+  font-family: 'Open Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 600; // Semi-bold per renderlo leggibile
+  text-align: center;
+  text-transform: uppercase; // Opzionale: rende i comandi più "autoritari"
+
+  // Stile Visivo (Verde Gradevole)
+  color: #ffffff;
+  background-color: #2E7D32; // Un verde solido, non accecante
+  border: 2px solid #2E7D32; // Bordo dello stesso colore (o leggermente diverso se vuoi stile)
+  border-radius: 6px; // Angoli smussati moderni
+
+  // Interazione
+  cursor: pointer;
+  transition: all 0.2s ease-in-out; // Animazione fluida per l'hover
+  user-select: none;
+
+  // Hover state (diventa leggermente più scuro)
+  &:hover {
+    background-color: #1B5E20;
+    border-color: #1B5E20;
+    transform: translateY(-1px); // Piccolo effetto "sollevamento"
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); // Ombretta leggera
+  }
+
+  // Active state (click)
+  &:active {
+    transform: translateY(1px); // Effetto "premuto"
+    box-shadow: none;
+  }
+
+  // Stato disabilitato (per i round passati)
+  &:disabled,
+  &.disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.7;
+  }
+}
+
+// Reset di base
+body {
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 20px;
+  font-family: 'Open Sans', sans-serif;
+  display: flex;
+  justify-content: center; // Centra tutto nello schermo
+}
+
+// Layout Principale Fisso
+.game-container {
+  width: 1280px; // Larghezza fissa Desktop
+  height: 850px; // Altezza fissa (o min-height)
+  background-color: #fff;
+  border: 2px solid #000;
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+// --- HEADER ---
+.game-header {
+  height: 60px;
+  border-bottom: 2px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    text-transform: uppercase;
+    color: #000; // MODIFICATO: Era Arancione
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+}
+
+// --- GRIGLIA 3 COLONNE ---
+.game-grid {
+  flex: 1; // Occupa tutto lo spazio rimanente
+  display: grid;
+  // Definisco le colonne: SX fissa, Centro elastico, DX fissa
+  grid-template-columns: 280px 1fr 280px;
+  grid-template-rows: 100%; // Altezza piena
+}
+
+.grid-col {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; // Spazio verticale tra i pannelli
+}
+
+// Bordi divisori tra le colonne
+.col-left {
+  border-right: 2px solid #000;
+}
+
+.col-right {
+  border-left: 2px solid #000;
+}
+
+// --- PANNELLI LATERALI (Info & Liste) ---
+.panel {
+  border: 2px solid #000;
+  padding: 10px;
+  background: #fff;
+}
+
+.panel-title {
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 2px solid #000;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  text-transform: uppercase;
+}
+
+// Lista laterale (indicatori)
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.list-entry {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 4px;
+  cursor: default; // Non cliccabile per azione, solo visuale
+
+  &.disabled {
+    text-decoration: line-through;
+    color: #ccc;
+  }
+
+  &.highlight {
+    background-color: #FFE0B2;
+    font-weight: bold;
+  }
+
+  // Match coi dadi
+}
+
+// Pannello Statistiche
+.panel-stats {
+  font-size: 16px;
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+
+  .val {
+    font-weight: 800;
+  }
+
+  .stat-sep {
+    border: none;
+    border-top: 1px dashed #999;
+    margin: 10px 0;
+  }
+
+  .stat-gold {
+    //color: #D84315;
+    font-size: 18px;
+  }
+
+  // Un colore rossiccio/oro
+}
+
+// --- COLONNA CENTRALE ---
+.col-center {
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+
+  // *** QUESTA E' LA CHIAVE MAGICA ***
+  // Dice alla colonna grid: "Puoi essere più piccola del tuo contenuto"
+  min-width: 0;
+}
+
+// Area Bonus Top (JOLLY & CONSUMABILI)
+.bonus-area {
+  display: flex;
+  gap: 15px;
+  // MODIFICATO: Aumentata altezza per dare più spazio (era 120px)
+  flex: 0 0 200px;
+  margin-bottom: 15px; // Un po' di aria sotto
+
+  .bonus-box {
+    flex: 1;
+    border: 2px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+
+    .placeholder-text {
+      color: #000; // MODIFICATO: Era arancione
+      font-weight: bold;
+      font-size: 18px;
+      text-align: center;
+      text-transform: uppercase;
+      opacity: 0.3; // Lo rendo un po' tenue per non disturbare
+    }
+  }
+}
+
+// Area Combinazioni (Scroll)
+.combinations-wrapper {
+  // Occupa lo spazio verticale rimanente nella colonna
+  flex: 1;
+  border: 2px solid #000;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden; // Tiene tutto dentro i bordi
+
+  // 1. FONDAMENTALE: Permette al flex item di restringersi sotto la larghezza del contenuto
+  min-width: 0;
+
+  .combinations-header {
+    background: #fff;
+    border-bottom: 1px solid #ccc;
+    padding: 5px;
+    text-align: center;
+    font-size: 12px;
+    color: #000;
+    font-weight: bold;
+    text-transform: uppercase;
+    flex-shrink: 0; // L'header non deve schiacciarsi
+  }
+
+  .combinations-track {
+    // 2. LAYOUT
+    display: flex;
+    align-items: flex-start; // Allinea in alto (meglio per lo scroll)
+    gap: 15px;
+    padding: 15px;
+
+    // 3. FIX SCROLL
+    width: 100%; // Forza la larghezza
+    overflow-x: auto; // Scroll orizzontale
+    overflow-y: hidden; // No scroll verticale
+
+    // 4. GESTIONE SPAZIO VERTICALE
+    // Mettiamo 'auto' così il div è alto solo quanto le carte + la scrollbar.
+    // La scrollbar sarà attaccata alle carte invece che in fondo alla pagina.
+    height: auto;
+
+    // Impedisce alle carte di andare a capo
+    flex-wrap: nowrap;
+
+    // Scrollbar styling
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #000;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #eee;
+    }
+
+    // *** IL FIX PERFECTION ***
+    // Questo pseudo-elemento crea uno spaziatore invisibile alla fine.
+    // Risolve il problema del padding destro ignorato dai browser.
+    &::after {
+      content: "";
+      display: block;
+      min-width: 15px; // Deve essere uguale al padding-left (15px)
+      height: 1px; // Basta che esista
+    }
+  }
+}
+
+// --- CARD CENTRALE (Unita e corretta) ---
+.combo-card {
+  // Dimensioni fisse
+  width: 160px;
+  min-width: 160px; // Rinforzo per evitare schiacciamenti
+
+  // FIX SCROLL: Impedisce alla card di restringersi
+  flex-shrink: 0;
+
+  border: 2px solid #000;
+  border-radius: 6px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+
+  // Margine per non tagliare l'ombra a destra o sotto durante lo scroll
+  margin-bottom: 4px;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  .card-header {
+    background: #eee;
+    padding: 8px;
+    border-bottom: 2px solid #000;
+    text-align: center;
+
+    .card-title {
+      display: block;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .card-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #666;
+    }
+  }
+
+  .card-body {
+    padding: 10px;
+    flex: 1;
+    font-size: 13px;
+
+    .card-info {
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .card-values {
+      margin-bottom: 10px;
+    }
+
+    .card-desc {
+      font-style: italic;
+      font-size: 11px;
+      color: #555;
+    }
+  }
+
+  .card-footer {
+    padding: 10px;
+    text-align: center;
+  }
+
+  .btn-action {
+    width: 100%;
+    padding: 6px;
+    border: 2px solid #000;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+
+    &:hover {
+      background: #000;
+      color: #fff;
+    }
+  }
+}
+
+// Variante per le UPPER CARD
+.combo-card.card-upper {
+  .card-header {
+    // Un grigio leggermente più scuro o tendente al bluastro/freddo per stacco
+    background-color: #d0d0d0;
+    border-bottom-color: #666;
+
+    .card-type {
+      color: #333; // Più scuro per contrasto
+      font-weight: bold;
+    }
+  }
+
+  // Opzionale: Se vuoi cambiare colore al bordo quando è upper
+  // border-color: #666;
+}
+
+// Area Dadi
+.dice-area {
+  // MODIFICATO: Ridotto leggermente o adattato se serve
+  // Prima era height fissa, lasciamola fissa ma diamo padding
+  flex: 0 0 140px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 20px;
+  padding-bottom: 10px;
+  padding-top: 15px;
+}
+
+
+
+// --- RIGHT COLUMN EXTRAS ---
+.roll-area {
+  margin-top: auto;
+  text-align: right;
+}
+
+// MODIFICATO: Stile Verde uguale a .btn-main
+.btn-roll {
+  display: inline-block;
+  width: 100%;
+  padding: 15px 0; // Altezza comoda
+
+  font-family: 'Open Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+
+  // Stile Visivo Verde
+  color: #ffffff;
+  background-color: #2E7D32;
+  border: 2px solid #2E7D32;
+  border-radius: 6px;
+
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  user-select: none;
+  box-shadow: 0 4px 0px #1B5E20; // Effetto 3D leggero sul bordo inferiore
+
+  &:hover {
+    background-color: #388E3C; // Verde leggermente più chiaro
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0px #1B5E20;
+  }
+
+  &:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0px #1B5E20;
+  }
+}
+
+/* Stili dei Dadi (Copiati dal precedente, funzionano ancora) */
+.dice-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0; // Il gap lo gestisce il container padre ora
+}
+
+.dice pre {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  font-size: 18px;
+  line-height: 18px;
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: default;
+}
+
+.btn-hold {
+  display: block;
+  width: 100%;
+  padding: 4px 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 5px;
+  background-color: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+
+  &.active {
+    background-color: #00BFFF;
+    border-color: #00BFFF;
+    color: #fff;
+
+    &:hover {
+      background-color: color.adjust(#00BFFF, $lightness: -10%);
+    }
+  }
+}
+
+
+
+// Container miniatura dentro la Card
+// Container miniatura dentro la Card
+.mini-dice-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; // Allinea in alto
+  width: 100%; // Occupa tutta la larghezza della card
+  height: 45px; // Altezza fissa riservata nello spazio (tarata su scale 0.5)
+  margin-top: 8px;
+  margin-bottom: 5px;
+
+  // La magia dello scale
+  // Nota: Usa top center così rimangono centrati orizzontalmente
+  transform: scale(0.35);
+  transform-origin: top center;
+
+  // Sovrascriviamo gli stili dei dadi clonati
+  .dice-wrapper {
+    margin: 0 2px !important; // Riduciamo drasticamente il gap laterale (sovrascrive style originali)
+    pointer-events: none; // Non cliccabili
+    transform: none !important; // Rimuove eventuali trasformazioni del dado originale
+    box-shadow: none !important;
+  }
+
+  // Se necessario, riduciamo anche il pre interno
+  .dice {
+    margin-bottom: 0;
+    box-shadow: none; // Rimuove ombre pesanti se presenti
+  }
+}
+
+// Assicurati che l'evidenziazione sia ben visibile anche in piccolo
+.dice-highlight {
+  pre {
+    background-color: #FFEB3B !important;
+    border-color: #FBC02D !important;
+    color: #000 !important;
+    font-weight: 900 !important; // Più grassetto per leggibilità in piccolo
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.8); // Un bagliore per farli staccare
+  }
+}
+===== END FILE: src/scss/src/_main.scss =====
+
+
+===== FILE: src/scss/styles.scss =====
+//COMMONS
+@use "./src/main" as *;
+===== END FILE: src/scss/styles.scss =====
