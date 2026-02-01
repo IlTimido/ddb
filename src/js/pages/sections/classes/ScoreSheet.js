@@ -21,6 +21,234 @@ export default class ScoreSheet {
   static UPPER_FIVES = "UpperFives";
   static UPPER_SIXES = "UpperSixes";
 
+  // --- COSTANTI RARITÀ JOLLY ---
+  static RARITY_COMMON = "Common";
+  static RARITY_UNCOMMON = "Uncommon";
+  static RARITY_RARE = "Rare";
+  static RARITY_LEGENDARY = "Legendary";
+
+  // --- DATABASE JOLLY (Neutri per ora) ---
+  static JOLLY_DATA = [
+    {
+      id: "j_beginner",
+      name: "Joker Principiante",
+      rarity: ScoreSheet.RARITY_COMMON,
+      description: "Un semplice portafortuna per iniziare.",
+      cost: 2,
+      sellValue: 1,
+      properties: { type: "passive_mult", val: 1 }, // Placeholder
+    },
+    {
+      id: "j_juggler",
+      name: "Il Giocoliere",
+      rarity: ScoreSheet.RARITY_COMMON,
+      description: "Ti piace giocare con i numeri bassi.",
+      cost: 3,
+      sellValue: 1,
+      properties: { type: "buff_small_cards", val: 10 },
+    },
+    {
+      id: "j_student",
+      name: "Lo Studente",
+      rarity: ScoreSheet.RARITY_COMMON,
+      description: "Studia le probabilità base.",
+      cost: 4,
+      sellValue: 2,
+      properties: { type: "reroll_bonus", val: 1 },
+    },
+    {
+      id: "j_acrobat",
+      name: "L'Acrobata",
+      rarity: ScoreSheet.RARITY_UNCOMMON,
+      description: "Salta tra i punteggi con agilità.",
+      cost: 6,
+      sellValue: 3,
+      properties: { type: "buff_straights", val: 50 },
+    },
+    {
+      id: "j_mime",
+      name: "Il Mimo",
+      rarity: ScoreSheet.RARITY_UNCOMMON,
+      description: "Copia l'ultima mano giocata.",
+      cost: 7,
+      sellValue: 3,
+      properties: { type: "retrigger", val: 1 },
+    },
+    {
+      id: "j_magician",
+      name: "Il Mago",
+      rarity: ScoreSheet.RARITY_RARE,
+      description: "Trasforma i dadi in oro.",
+      cost: 10,
+      sellValue: 5,
+      properties: { type: "gold_gen", val: 2 },
+    },
+    {
+      id: "j_greedy",
+      name: "L'Avido",
+      rarity: ScoreSheet.RARITY_RARE,
+      description: "Moltiplica i soldi guadagnati.",
+      cost: 12,
+      sellValue: 6,
+      properties: { type: "interest_cap", val: 5 },
+    },
+    {
+      id: "j_baron",
+      name: "Il Barone",
+      rarity: ScoreSheet.RARITY_RARE,
+      description: "I Re danno moltiplicatori folli.",
+      cost: 15,
+      sellValue: 7,
+      properties: { type: "card_mult", card_val: 6, mult: 1.5 },
+    },
+    {
+      id: "j_king",
+      name: "Il Re Pazzo",
+      rarity: ScoreSheet.RARITY_LEGENDARY,
+      description: "Distrugge tutto per creare caos.",
+      cost: 25,
+      sellValue: 12,
+      properties: { type: "chaos_mode", val: true },
+    },
+    {
+      id: "j_god",
+      name: "La Divinità",
+      rarity: ScoreSheet.RARITY_LEGENDARY,
+      description: "Vinci la partita automaticamente? (Magari no).",
+      cost: 50,
+      sellValue: 25,
+      properties: { type: "win_condition", val: 0.1 },
+    },
+  ];
+
+  // --- DATABASE VOUCHER ---
+  static VOUCHERS_DATA = [
+    {
+      id: "v_extra_hand",
+      name: "Guanto Magico",
+      description: "+1 Lancio per ogni round in modo permanente.",
+      cost: 10,
+      properties: { type: "hands_per_round", val: 1 },
+    },
+    {
+      id: "v_discount",
+      name: "Tessera Fedeltà",
+      description: "Riduce il costo degli oggetti nel negozio del 10%.",
+      cost: 15,
+      properties: { type: "shop_discount", val: 10 }, // % sconto
+    },
+    {
+      id: "v_jolly_slot",
+      name: "Tascone",
+      description: "+1 Slot per le carte Jolly.",
+      cost: 10,
+      properties: { type: "slot_jolly", val: 1 },
+    },
+    {
+      id: "v_cons_slot",
+      name: "Zaino Tattico",
+      description: "+1 Slot per le carte Consumabili.",
+      cost: 10,
+      properties: { type: "slot_consumable", val: 1 },
+    },
+    {
+      id: "v_interest",
+      name: "Banchiere",
+      description: "Aumenta il cap degli interessi guadagnati.",
+      cost: 20,
+      properties: { type: "interest_cap_up", val: 5 },
+    },
+  ];
+
+  // --- NUOVO: UTILITY ESCLUSIVE DELLO SHOP ---
+  static SHOP_UTILITIES_DATA = [
+    {
+      id: "u_reroll",
+      name: "Dadi Truccati",
+      description: "+3 Lanci per il round corrente.",
+      cost: 4,
+      sellValue: 2,
+      tier: 0, // Tier visivo (Azzurro)
+      // Usiamo una proprietà 'effect' per mappare la logica
+      effectType: "add_hands",
+      effectVal: 3,
+    },
+    {
+      id: "u_sniper",
+      name: "Mirino",
+      description: "Aggiunge +100 Chips al risultato finale.",
+      cost: 5,
+      sellValue: 2,
+      tier: 0,
+      effectType: "add_chips",
+      effectVal: 100,
+    },
+    {
+      id: "u_mult_potion",
+      name: "Pozione Rossa",
+      description: "Aggiunge +10 Mult al risultato finale.",
+      cost: 6,
+      sellValue: 3,
+      tier: 1, // Tier visivo (Oro)
+      effectType: "add_mult",
+      effectVal: 10,
+    },
+    {
+      id: "u_mystery",
+      name: "Scatola Misteriosa",
+      description: "Genera 2 Jolly Comuni casuali (se hai spazio).",
+      cost: 8,
+      sellValue: 4,
+      tier: 1,
+      effectType: "spawn_jolly",
+      effectVal: 2,
+    },
+  ];
+
+  // --- TIPI DI PACCHETTO ---
+  static PACK_TYPE_UTILITY = "utility"; // Contiene Upper Cards (no Twos)
+  static PACK_TYPE_JOLLY = "jolly"; // Contiene Jolly Cards
+
+  // --- DATABASE PACCHETTI (Template Base) ---
+  static BOOSTERS_DATA = [
+    {
+      id: "bp_utility_std",
+      name: "Pacchetto Utilità",
+      type: ScoreSheet.PACK_TYPE_UTILITY,
+      cost: 4,
+      totalCards: 3,
+      chooseCards: 1,
+      description: "Scegli 1 carta Consumabile su 3.",
+    },
+    {
+      id: "bp_jolly_std",
+      name: "Pacchetto Jolly",
+      type: ScoreSheet.PACK_TYPE_JOLLY,
+      cost: 6,
+      totalCards: 3,
+      chooseCards: 1,
+      description: "Scegli 1 carta Jolly su 3.",
+    },
+    {
+      id: "bp_utility_jumbo",
+      name: "Utilità Jumbo",
+      type: ScoreSheet.PACK_TYPE_UTILITY,
+      cost: 6,
+      totalCards: 5,
+      chooseCards: 1,
+      description: "Scegli 1 carta Consumabile su 5.",
+    },
+    {
+      id: "bp_jolly_jumbo",
+      name: "Jolly Jumbo",
+      type: ScoreSheet.PACK_TYPE_JOLLY,
+      cost: 8,
+      totalCards: 5,
+      chooseCards: 1,
+      description: "Scegli 1 carta Jolly su 5.",
+    },
+  ];
+
   // --- MODIFICATO: NUOVI VALORI BILANCIATI ---
   static LOWERS_DATA = [
     // TIER 1: Safety

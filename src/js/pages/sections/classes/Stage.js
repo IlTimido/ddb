@@ -3,9 +3,11 @@ import Lowers from "./Lowers";
 import Player from "./Player";
 import Round from "./Round";
 import ScoreSheet from "./ScoreSheet";
+import Shop from "./Shop";
 import StatsPanel from "./StatsPanel";
 import Uppers from "./Uppers";
-import jQuery from "jquery"; // Aggiunto import mancante se serve, o già presente
+import Utility from "./Utility"; // <--- NUOVO IMPORT
+import jQuery from "jquery";
 
 export default class Stage {
   clip = null;
@@ -16,13 +18,15 @@ export default class Stage {
   lowers = [];
   uppers = [];
 
-  constructor(config) {
+  constructor(config, onStageComplete) {
     this.config = config;
+    this.onStageComplete = onStageComplete; // <--- Salviamo il riferimento
   }
 
   init() {
     this.createStageScreen();
     this.renderConsumables();
+    this.renderJollies(); // <--- NUOVO: Renderizza i Jolly
     this.renderActiveEffects();
     this.nextRound();
   }
@@ -54,16 +58,16 @@ export default class Stage {
 
     // 2. CHECK VITTORIA TAPPA
     if (currentStageScore >= targetScore) {
-      // AUTO-VENDITA TWOS SCADUTI
+      // Auto-Vendita e Pulizia
       [...Player.activeEffects].forEach((item) => {
         if (item.category === "UpperTwos" && item.tier === 0) {
           this.sellConsumable(item.id);
           WinAlert.show("SCADUTO", `Investimento scaduto! Venduto automaticamente per ${item.accumulatedValue}$`);
         }
       });
-
       this.cleanupEffects("stage");
 
+      // Rimuovi consumabili scaduti a fine tappa
       Player.consumables = Player.consumables.filter((item) => {
         if (item.category !== "UpperThrees" && item.tier === 0) return false;
         if (item.category === "UpperThrees") return false;
@@ -71,8 +75,21 @@ export default class Stage {
       });
       this.renderConsumables();
 
+      // --- APERTURA SHOP ---
       setTimeout(() => {
-        WinAlert.show("VITTORIA!", "TAPPA COMPLETATA!<br>(Qui ci sarà lo Shop)");
+        WinAlert.show("TAPPA COMPLETATA!", `Hai battuto il punteggio target!<br>Incasso Tappa: <b>${this.config.moneyReward || 5}$</b>`, () => {
+          // Aggiungiamo ricompensa tappa (opzionale ma consigliato)
+          Player.gold += this.config.moneyReward || 5;
+
+          // Creiamo lo Shop
+          const shop = new Shop(() => {
+            // Quando l'utente clicca "Prossima Tappa" nello Shop...
+            // Chiamiamo la callback di Route per caricare la nuova tappa
+            if (this.onStageComplete) this.onStageComplete();
+          });
+          shop.init();
+          shop.bindEvents();
+        });
       }, 500);
       return;
     }
@@ -96,6 +113,9 @@ export default class Stage {
   }
 
   createStageScreen() {
+    // Rimuoviamo il vecchio stage screen se presente per evitare duplicati
+    jQuery(".game-container").not("#template_screen_game").remove();
+
     this.clip = jQuery("#template_screen_game").clone();
     this.clip.removeAttr("id");
     jQuery(".js-main").append(this.clip);
@@ -110,50 +130,54 @@ export default class Stage {
   }
 
   acquireConsumable(matchData, staticData) {
+    // 1. Definisci il tipo di durata
+    let durationType = "round";
+    if (matchData.category === "UpperOnes") {
+      durationType = "round";
+    } else if (matchData.category === "UpperTwos") {
+      // Twos hanno regole speciali: Tier 0 scade a fine tappa, Tier 1 a fine Run
+      durationType = matchData.tier === 0 ? "stage" : "run";
+    } else {
+      durationType = matchData.tier === 0 ? "round" : "stage";
+    }
+
+    // 2. Calcola Valore Vendita
+    const sellValue = (staticData.baseValue || 0) + (matchData.tier || 0);
+
+    // 3. Prepara i dati per la Utility
+    const utilityData = {
+      id: matchData.category + "_" + Date.now(),
+      category: matchData.category,
+      name: staticData.name,
+      // Seleziona la descrizione corretta in base al tier
+      description: matchData.tier === 0 ? staticData.tier0 : staticData.tier1,
+      tier: matchData.tier,
+      cost: 0, // Le carte craftate non costano nulla
+      sellValue: sellValue,
+      durationType: durationType,
+      // Inizializza valore accumulato (Start a 1 per Twos, 0 per altri)
+      accumulatedValue: matchData.category === "UpperTwos" ? 1 : 0,
+    };
+
+    // 4. Istanzia la classe Utility (Sostituisce l'oggetto anonimo)
+    const newItem = new Utility(utilityData);
+
     // --- ECCEZIONE: TWOS (Vanno diretti in ACTIVE) ---
     if (matchData.category === "UpperTwos") {
-      const item = {
-        id: matchData.category + "_" + Date.now(),
-        category: matchData.category,
-        name: staticData.name,
-        tier: matchData.tier,
-        description: matchData.tier === 0 ? staticData.tier0 : staticData.tier1,
-        durationType: matchData.tier === 0 ? "stage" : "run",
-        accumulatedValue: 1,
-      };
-      Player.activeEffects.push(item);
+      Player.activeEffects.push(newItem);
       this.renderActiveEffects();
-      WinAlert.show("INVESTIMENTO", `Hai ottenuto un investimento!<br>Valore attuale: <b>${item.accumulatedValue}$</b>`);
+      WinAlert.show("INVESTIMENTO", `Hai ottenuto un investimento!<br>Valore attuale: <b>${newItem.accumulatedValue}$</b>`);
       return true;
     }
+
+    // --- CONTROLLO SPAZIO INVENTARIO ---
     if (Player.consumables.length >= Player.MAX_CONSUMABLES) {
       WinAlert.show("INVENTARIO PIENO", "Non hai spazio per prendere questa carta.");
       return false;
     }
 
-    let durationType = "round";
-    if (matchData.category === "UpperOnes") {
-      durationType = "round";
-    } else {
-      durationType = matchData.tier === 0 ? "round" : "stage";
-    }
-
-    // CALCOLO VALORE DI VENDITA (Base + Tier Bonus)
-    // Tier 0 -> Base Value
-    // Tier 1 -> Base Value + 1
-    const sellValue = (staticData.baseValue || 0) + (matchData.tier || 0);
-
-    const consumableItem = {
-      id: matchData.category + "_" + Date.now(),
-      category: matchData.category,
-      name: staticData.name,
-      tier: matchData.tier,
-      description: matchData.tier === 0 ? staticData.tier0 : staticData.tier1,
-      durationType: durationType,
-      sellValue: sellValue, // NUOVO: Salviamo il valore
-    };
-
-    Player.consumables.push(consumableItem);
+    // 5. Aggiungi all'inventario
+    Player.consumables.push(newItem);
     this.renderConsumables();
     return true;
   }
@@ -176,7 +200,10 @@ export default class Stage {
       return;
     }
 
+    // Reset valore accumulato quando si attiva (per sicurezza, anche se per Fours parte da 0)
     item.accumulatedValue = 0;
+
+    // Sposta da Consumables a ActiveEffects
     Player.consumables.splice(index, 1);
     Player.activeEffects.push(item);
 
@@ -199,13 +226,18 @@ export default class Stage {
     this.renderActiveEffects();
   }
 
-  // --- RENDERERS UI ---
+  // --- RENDERERS UI (Aggiornati per usare Utility.js) ---
 
   renderConsumables() {
     const $container = this.clip.find(".js-consumables-container");
     $container.find(".mini-card").remove();
+    $container.find(".placeholder-text").toggle(Player.consumables.length === 0);
+
     Player.consumables.forEach((item) => {
-      const $card = this._createMiniCard(item, true); // true = inventario
+      const $card = item.create("inventory", {
+        onUse: (u) => this.activateConsumable(u.id),
+        onSell: (u) => this.sellConsumable(u.id),
+      });
       $container.append($card);
     });
   }
@@ -213,83 +245,18 @@ export default class Stage {
   renderActiveEffects() {
     const $container = this.clip.find(".js-active-effects-container");
     $container.find(".mini-card").remove();
+
     Player.activeEffects.forEach((item) => {
-      const $card = this._createMiniCard(item, false); // false = attivo
-      $card.addClass("active-effect");
+      // item è un'istanza di Utility
+      const $card = item.create("active", {
+        onSell: (u) => this.sellConsumable(u.id), // Necessario per vendere i Twos attivi
+      });
+      // Nota: item.create() aggiunge già la classe "active-effect" se il contesto è "active"
       $container.append($card);
     });
   }
 
-  _createMiniCard(item, isInInventory) {
-    const displayTier = item.tier + 1;
-    const fullTitle = `${item.name} - Tier ${displayTier}`;
-    const tierClass = item.tier === 0 ? "tier-0" : "tier-1";
-
-    // --- VISUALIZZAZIONE VALORE ---
-    let dynamicValueHtml = "";
-    const baseStyle = "margin-bottom:5px; font-weight:900; font-size:12px; padding:2px; border-radius:4px; border:1px solid";
-
-    if (item.accumulatedValue !== undefined && item.accumulatedValue > 0 && item.category !== "UpperTwos") {
-      dynamicValueHtml = `<div style="${baseStyle} #D32F2F; color:#D32F2F;">+${item.accumulatedValue} Chips</div>`;
-    } else if (item.category === "UpperFours" && !isInInventory) {
-      dynamicValueHtml = `<div style="${baseStyle} #999; color:#999; font-weight:bold; font-size:11px;">+0 Chips</div>`;
-    } else if (item.category === "UpperFives" && !isInInventory) {
-      dynamicValueHtml = `<div style="${baseStyle} #D32F2F; color:#D32F2F;">+5 Mult</div>`;
-    } else if (item.category === "UpperSixes" && !isInInventory) {
-      dynamicValueHtml = `<div style="${baseStyle} #2E7D32; color:#2E7D32;">+50 Chips</div>`;
-    } else if (item.category === "UpperTwos") {
-      dynamicValueHtml = `<div style="${baseStyle} #DAA520; color:#FFD700; background:#FFF8E1; color:#B8860B;">Valore: ${item.accumulatedValue}$</div>`;
-    }
-
-    const $el = jQuery(`
-      <div class="mini-card">
-        <div class="mini-header ${tierClass}">${fullTitle}</div>
-        <div class="mini-body">
-            ${dynamicValueHtml}
-            <div class="mini-desc">${item.description}</div>
-        </div>
-        <div class="mini-footer"></div>
-      </div>
-    `);
-
-    const $footer = $el.find(".mini-footer");
-
-    // CASO A: INVENTARIO (Pulsanti USA e VENDI)
-    if (isInInventory) {
-      // Button USA
-      const $btn = jQuery('<button class="btn-mini-use">USA</button>');
-      $btn.on("click", () => {
-        if (this.clip.hasClass("input-locked")) return;
-        this.activateConsumable(item.id);
-      });
-      $footer.append($btn);
-
-      // Button VENDI (NUOVO)
-      // Mostriamo il valore di vendita nel pulsante
-      const sellLabel = `VENDI (${item.sellValue || 0}$)`;
-      const $btnSell = jQuery(`<button class="btn-mini-use" style="background:#D32F2F; margin-top:2px;">${sellLabel}</button>`);
-      $btnSell.on("click", () => {
-        // FIX CONFIRM -> WinAlert.ask
-        WinAlert.ask("VENDITA", `Vuoi vendere <b>${item.name}</b> per <b>${item.sellValue}$</b>?`, () => {
-          this.sellConsumable(item.id);
-        });
-      });
-      $footer.append($btnSell);
-    }
-    // CASO B: ATTIVA MA È UN "TWO" (Pulsante VENDI)
-    else if (item.category === "UpperTwos") {
-      const $btnSell = jQuery('<button class="btn-mini-use" style="background:#D32F2F;">VENDI</button>');
-      $btnSell.on("click", () => {
-        // FIX CONFIRM -> WinAlert.ask
-        WinAlert.ask("INCASSARE", `Vuoi incassare l'investimento?<br>Valore attuale: <b>${item.accumulatedValue}$</b>`, () => {
-          this.sellConsumable(item.id);
-        });
-      });
-      $footer.append($btnSell);
-    }
-
-    return $el;
-  }
+  // NOTA: _createMiniCard è stato rimosso perché la logica è ora in Utility.js
 
   // --- LOGICA TIER 1/2 THREES ---
   _applyThreesRandom() {
@@ -338,13 +305,12 @@ export default class Stage {
       $overlay.remove();
       this.clip.removeClass("input-locked");
     });
-
     $box.append($list).append($confirmBtn);
     $overlay.append($box);
     jQuery("body").append($overlay);
   }
 
-  // --- METODO VENDITA AGGIORNATO ---
+  // --- METODO VENDITA ---
   sellConsumable(itemId) {
     // 1. Cerca nell'Inventario
     let index = Player.consumables.findIndex((c) => c.id === itemId);
@@ -385,5 +351,28 @@ export default class Stage {
       }
     });
     if (changed) this.renderActiveEffects();
+  }
+
+  renderJollies() {
+    const $container = this.clip.find(".js-jolly-container");
+    $container.find(".jolly-card").remove(); // Pulisce
+    $container.find(".placeholder-text").toggle(Player.jollies.length === 0); // Nasconde placeholder se ci sono carte
+
+    Player.jollies.forEach((jolly) => {
+      // Usa il metodo create di Jolly.js
+      const $card = jolly.create("inventory", (clickedJolly) => {
+        WinAlert.ask("VENDITA JOLLY", `Vuoi vendere <b>${clickedJolly.name}</b> per ${clickedJolly.sellValue}$?`, () => {
+          // Logica vendita Jolly
+          Player.gold += clickedJolly.sellValue;
+          Player.jollies = Player.jollies.filter((j) => j !== clickedJolly);
+          this.renderJollies();
+          jQuery(".js-total-gold", this.clip).text(Player.gold + "$");
+        });
+      });
+
+      // Riduciamo un po' la dimensione per farli stare nella barra (opzionale, via CSS o scale)
+      $card.css("transform", "scale(0.85)");
+      $container.append($card);
+    });
   }
 }

@@ -972,3 +972,569 @@ body {
     // Il cubic-bezier da quell'effetto "elastico" alla fine
   }
 }
+
+// --- JOLLY CARD STYLES ---
+.jolly-card {
+  width: 140px;
+  height: 240px; // Un po' più alte delle mini-card
+  border: 3px solid #000;
+  border-radius: 8px;
+  background: #fff;
+  display: inline-flex;
+  flex-direction: column;
+  margin-right: 10px;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+
+  // Header Colorato in base alla rarità
+  .jolly-header {
+    padding: 8px 4px;
+    text-align: center;
+    border-bottom: 2px solid #000;
+
+    .jolly-name {
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 12px;
+      line-height: 1.1;
+      color: #fff;
+      text-shadow: 1px 1px 0 #000;
+    }
+  }
+
+  // Placeholder centrale per l'arte
+  .jolly-art {
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f0f0f0;
+    border-bottom: 2px solid #000;
+
+    .jolly-placeholder {
+      font-size: 40px;
+      font-weight: 900;
+      color: #ccc;
+    }
+  }
+
+  .jolly-body {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .jolly-rarity {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #000;
+    display: inline-block;
+  }
+
+  .jolly-desc {
+    font-size: 11px;
+    line-height: 1.3;
+    color: #333;
+    font-weight: 600;
+  }
+
+  .jolly-footer {
+    padding: 8px;
+    border-top: 2px solid #000;
+    background: #eee;
+  }
+
+  .btn-jolly-action {
+    width: 100%;
+    padding: 6px 0;
+    font-weight: 900;
+    font-size: 11px;
+    text-transform: uppercase;
+    border: 2px solid #000;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #fff;
+
+    &.btn-buy {
+      background-color: #2E7D32;
+    }
+
+    // Verde
+    &.btn-sell {
+      background-color: #D32F2F;
+    }
+
+    // Rosso
+
+    &:hover {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+  }
+
+  // --- COLORI RARITÀ ---
+  &.rarity-common {
+    .jolly-header {
+      background-color: #757575;
+    }
+
+    // Grigio
+    .jolly-rarity {
+      background-color: #E0E0E0;
+      color: #000;
+    }
+  }
+
+  &.rarity-uncommon {
+    .jolly-header {
+      background-color: #2E7D32;
+    }
+
+    // Verde
+    .jolly-rarity {
+      background-color: #A5D6A7;
+      color: #000;
+    }
+  }
+
+  &.rarity-rare {
+    .jolly-header {
+      background-color: #1565C0;
+    }
+
+    // Blu
+    .jolly-rarity {
+      background-color: #90CAF9;
+      color: #000;
+    }
+  }
+
+  &.rarity-legendary {
+    .jolly-header {
+      background-color: #F57F17;
+    }
+
+    // Oro/Arancio
+    .jolly-rarity {
+      background-color: #FFF59D;
+      color: #000;
+    }
+
+    border-color: #FFD700; // Bordo dorato
+  }
+}
+
+// --- VOUCHER CARD STYLES ---
+.voucher-card {
+  width: 140px;
+  height: 200px; // Un po' più bassi dei Jolly
+  background: #fff;
+  border: 3px solid #4A148C; // Viola scuro
+  border-radius: 8px;
+  display: inline-flex;
+  flex-direction: column;
+  margin-right: 10px;
+  box-shadow: 5px 5px 0 rgba(74, 20, 140, 0.2);
+  transition: transform 0.2s;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+
+  // Header Viola
+  .voucher-header {
+    background-color: #7B1FA2;
+    padding: 8px 4px;
+    text-align: center;
+    border-bottom: 2px solid #4A148C;
+
+    .voucher-name {
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .voucher-body {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: #F3E5F5; // Viola chiarissimo
+  }
+
+  .voucher-icon {
+    font-size: 24px;
+    font-weight: 900;
+    color: #BA68C8;
+    margin-bottom: 5px;
+    border: 2px solid #BA68C8;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    line-height: 26px;
+  }
+
+  .voucher-desc {
+    font-size: 11px;
+    color: #4A148C;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .voucher-footer {
+    padding: 8px;
+    background: #E1BEE7;
+    border-top: 2px solid #4A148C;
+  }
+
+  .btn-voucher-action {
+    width: 100%;
+    padding: 6px 0;
+    font-weight: 900;
+    font-size: 11px;
+    text-transform: uppercase;
+    border: 2px solid #4A148C;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #fff;
+    background-color: #7B1FA2;
+
+    &:hover {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+  }
+
+  .voucher-status {
+    width: 100%;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 900;
+    color: #4A148C;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  // Effetto "Buco" laterale (opzionale, tocco estetico)
+  .voucher-ticket-cutout {
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    background-color: #f4f4f4; // Colore sfondo pagina
+    border-radius: 50%;
+    border: 3px solid #4A148C;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+}
+
+// --- BOOSTER PACK STYLES ---
+.booster-pack {
+  width: 130px;
+  height: 190px;
+  display: inline-flex;
+  flex-direction: column;
+  margin-right: 15px;
+  position: relative;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-5px) scale(1.02);
+    z-index: 5;
+  }
+
+  .pack-wrapper {
+    flex: 1;
+    border-radius: 6px;
+    border: 2px solid #333;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.3);
+
+    // Effetto riflesso plastica generico
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 40%);
+      pointer-events: none;
+    }
+  }
+
+  .pack-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 10px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  .pack-name {
+    font-weight: 900;
+    font-size: 14px;
+    text-transform: uppercase;
+    line-height: 1.2;
+    margin-bottom: 5px;
+  }
+
+  .pack-info {
+    font-size: 11px;
+    font-weight: bold;
+    opacity: 0.9;
+  }
+
+  .pack-footer {
+    margin-top: 8px;
+  }
+
+  .btn-pack-buy {
+    width: 100%;
+    padding: 8px 0;
+    font-weight: 800;
+    font-size: 12px;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+
+    &:hover {
+      background: #333;
+    }
+  }
+
+  // --- VARIANTI DI TIPO ---
+
+  // Utility (Blu/Grigio Tecnico)
+  &.pack-utility .pack-wrapper {
+    background: linear-gradient(to bottom, #455A64, #607D8B, #455A64);
+    border-color: #263238;
+  }
+
+  // Jolly (Rosso/Oro Vivace)
+  &.pack-jolly .pack-wrapper {
+    background: linear-gradient(to bottom, #C62828, #E53935, #B71C1C);
+    border-color: #8E0000;
+
+    .pack-name {
+      color: #FFEB3B; // Oro
+    }
+  }
+}
+
+// --- SHOP SCREEN ---
+.shop-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #f4f4f4; // Sfondo grigio chiaro
+  z-index: 100; // Sopra al gioco
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+
+  .shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 4px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .shop-gold {
+      font-size: 24px;
+      font-weight: 900;
+      color: #D84315;
+    }
+  }
+
+  .shop-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr; // Due colonne principali
+    grid-template-rows: 1fr 1fr; // Due righe
+    gap: 20px;
+  }
+
+  // Stile comune per le sezioni
+  .shop-section {
+    background: #fff;
+    border: 2px solid #000;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    .section-title {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: #000;
+      color: #fff;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .section-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center; // Centra le carte
+      gap: 20px;
+    }
+  }
+
+  // Layout Specifico Aree
+  .area-cards {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    // Alto Sinistra
+  }
+
+  .area-packs {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    // Alto Destra (Prima erano i Voucher)
+  }
+
+  .area-voucher {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    // Basso Sinistra (Prima erano i Pacchetti)
+  }
+
+  // Area Azioni (Next / Reroll)
+  .area-actions {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    background: transparent; // Trasparente per le azioni
+    border: none;
+  }
+
+  .btn-shop-action {
+    width: 80%;
+    padding: 20px;
+    font-size: 18px;
+    text-transform: uppercase;
+    font-weight: 900;
+    border: 3px solid #000;
+    cursor: pointer;
+    transition: transform 0.1s;
+
+    &.btn-next {
+      background-color: #2E7D32;
+      color: #fff;
+
+      &:hover {
+        background-color: #1B5E20;
+      }
+    }
+
+    &.btn-reroll {
+      background-color: #F57F17;
+      color: #fff;
+
+      &:hover {
+        background-color: #E65100;
+      }
+    }
+  }
+}
+
+// --- BOOSTER OPENING OVERLAY ---
+.booster-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  h2 {
+    color: #fff;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .booster-cards-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+
+    // Le carte qui devono essere cliccabili
+    .mini-card,
+    .jolly-card {
+      cursor: pointer;
+
+      &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px #fff;
+      }
+    }
+  }
+
+  .booster-info {
+    color: #ccc;
+    font-weight: bold;
+  }
+}
