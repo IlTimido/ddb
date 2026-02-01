@@ -1,4 +1,4 @@
-BUNDLE GENERATED AT: 2026-02-01T10:51:38.313Z
+BUNDLE GENERATED AT: 2026-02-01T13:38:46.896Z
 ROOT: E:\3x1010\Projects-2026\ddb
 INCLUDES: index.html + src/** (recursive)
 
@@ -52,6 +52,8 @@ INCLUDES: index.html + src/** (recursive)
             <div class="stat-row">Round: <span class="val js-round-current">1</span></div>
             <div class="stat-row">Lanci rimanenti: <span class="val js-rolls-left">3</span></div>
             <hr class="stat-sep">
+            <div class="stat-row stat-lives" style="color:#D32F2F; margin-bottom: 5px;">Vite: <span
+                class="val js-total-lives">2&hearts;</span></div>
             <div class="stat-row stat-gold">Gold: <span class="val js-total-gold">0$</span></div>
           </div>
         </aside>
@@ -543,23 +545,23 @@ import ScoreSheet from "./ScoreSheet";
 
 export default class Jolly {
   constructor(data) {
-    // Copiamo i dati statici nell'istanza per poterli modificare (es. se un jolly cambia valore)
     this.id = data.id;
     this.name = data.name;
     this.rarity = data.rarity;
     this.description = data.description;
     this.cost = data.cost;
     this.sellValue = data.sellValue;
-    this.properties = data.properties; // L'oggetto generico per le logiche future
+    this.properties = data.properties;
   }
 
   /**
    * Crea l'elemento HTML della card
    * @param {string} context - "shop" | "inventory"
-   * @param {Function} actionCallback - Funzione da eseguire al click del bottone
+   * @param {Object} callbacks - { onBuy, onSell }
    */
-  create(context, actionCallback) {
-    const rarityClass = this.rarity.toLowerCase(); // common, uncommon...
+  create(context, callbacks = {}) {
+    // <--- MODIFICATO
+    const rarityClass = this.rarity.toLowerCase();
 
     const $card = jQuery(`
       <div class="jolly-card rarity-${rarityClass}">
@@ -583,14 +585,18 @@ export default class Jolly {
     if (context === "shop") {
       $btn.text(`COMPRA (${this.cost}$)`);
       $btn.addClass("btn-buy");
+      // FIX: Usiamo callbacks.onBuy
+      $btn.on("click", () => {
+        if (callbacks.onBuy) callbacks.onBuy(this);
+      });
     } else {
       $btn.text(`VENDI (${this.sellValue}$)`);
       $btn.addClass("btn-sell");
+      // FIX: Usiamo callbacks.onSell
+      $btn.on("click", () => {
+        if (callbacks.onSell) callbacks.onSell(this);
+      });
     }
-
-    $btn.on("click", () => {
-      if (actionCallback) actionCallback(this);
-    });
 
     $footer.append($btn);
 
@@ -748,16 +754,23 @@ export default class Lowers {
 ===== FILE: src/js/pages/sections/classes/Player.js =====
 export default class Player {
   static totalScore = 0;
-  static gold = 0;
+  static gold = 100;
+  static lives = 2; // NUOVO: Vite Default
 
-  // Limiti inventario
-  static MAX_CONSUMABLES = 5; // Aumentiamo a 5 visto che c'è lo scroll
+  // --- LIMITI INVENTARIO ---
+  static MAX_CONSUMABLES = 5;
+  static MAX_JOLLIES = 5;
 
-  // Inventario: contiene oggetti { id, name, tier, description, durationType }
+  // --- CONFIGURAZIONE SHOP ---
+  static SHOP_DAILY_CARDS = 2;
+  static SHOP_BOOSTER_PACKS = 2;
+  static REROLL_COST = 5;
+
+  // --- INVENTARI ---
   static consumables = [];
-
-  // Effetti Attivi: contiene gli stessi oggetti ma spostati qui quando usati
   static activeEffects = [];
+  static jollies = [];
+  static vouchers = [];
 }
 ===== END FILE: src/js/pages/sections/classes/Player.js =====
 
@@ -1071,6 +1084,8 @@ export default class Round {
 
 ===== FILE: src/js/pages/sections/classes/Route.js =====
 import Stage from "./Stage";
+import WinAlert from "../helpers/WinAlert";
+import jQuery from "jquery";
 
 export default class Route {
   stage = null;
@@ -1084,8 +1099,32 @@ export default class Route {
   }
 
   init() {
-    this.stage = new Stage(this.stages[this.currentStageIndex]);
+    this.loadStage(this.currentStageIndex);
+  }
+
+  loadStage(index) {
+    if (index >= this.stages.length) {
+      WinAlert.show("VITTORIA TOTALE", "Hai completato tutte le tappe della Run!");
+      return;
+    }
+
+    // Cleanup visivo
+    if (this.stage) {
+      jQuery(".js-stage-name").empty();
+    }
+
+    this.currentStageIndex = index;
+    const stageConfig = this.stages[this.currentStageIndex];
+
+    // *** IMPORTANTE: Passiamo la callback (secondo parametro) ***
+    this.stage = new Stage(stageConfig, () => this.onStageComplete());
     this.stage.init();
+  }
+
+  // Questa viene chiamata quando lo Stage finisce (dopo lo Shop)
+  onStageComplete() {
+    console.log("Stage Completato. Carico il prossimo...");
+    this.loadStage(this.currentStageIndex + 1);
   }
 }
 ===== END FILE: src/js/pages/sections/classes/Route.js =====
@@ -1742,15 +1781,312 @@ export default class ScoreSheet {
 ===== END FILE: src/js/pages/sections/classes/ScoreSheet.js =====
 
 
+===== FILE: src/js/pages/sections/classes/Shop.js =====
+import jQuery from "jquery";
+import Player from "./Player";
+import ScoreSheet from "./ScoreSheet";
+import Jolly from "./Jolly";
+import Utility from "./Utility";
+import Voucher from "./Voucher";
+import BoosterPack from "./BoosterPack";
+import WinAlert from "../helpers/WinAlert";
+
+export default class Shop {
+  constructor(stageCallback) {
+    this.stageCallback = stageCallback;
+    this.$el = null;
+
+    this.items = {
+      cards: [],
+      voucher: null,
+      packs: [],
+    };
+  }
+
+  init() {
+    this.generateItems();
+    this.render();
+  }
+
+  // --- LOGICA GENERAZIONE ---
+  generateItems() {
+    this.items.cards = [];
+    this.items.packs = [];
+    this.items.voucher = null;
+
+    // 1. Genera le Carte (Offerte del Giorno)
+    this._generateCards();
+
+    // 2. Un Voucher
+    const availableVouchers = ScoreSheet.VOUCHERS_DATA.filter((v) => !Player.vouchers.some((pv) => pv.id === v.id));
+    if (availableVouchers.length > 0) {
+      const randomVoucher = availableVouchers[Math.floor(Math.random() * availableVouchers.length)];
+      this.items.voucher = new Voucher(randomVoucher);
+    }
+
+    // 3. Genera Pacchetti (Usa variabile Player)
+    for (let i = 0; i < Player.SHOP_BOOSTER_PACKS; i++) {
+      const randomPack = this._getRandomItem(ScoreSheet.BOOSTERS_DATA);
+      this.items.packs.push(new BoosterPack(randomPack));
+    }
+  }
+
+  // --- Genera solo le carte (usato anche dal Reroll) ---
+  _generateCards() {
+    this.items.cards = [];
+    // Usa variabile Player
+    for (let i = 0; i < Player.SHOP_DAILY_CARDS; i++) {
+      // 50% Jolly, 50% Utility
+      if (Math.random() > 0.5) {
+        const randomJolly = this._getRandomItem(ScoreSheet.JOLLY_DATA);
+        this.items.cards.push(new Jolly(randomJolly));
+      } else {
+        const randomUtil = this._getRandomItem(ScoreSheet.SHOP_UTILITIES_DATA);
+        this.items.cards.push(new Utility(randomUtil));
+      }
+    }
+  }
+
+  _getRandomItem(list) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  // --- RENDER UI ---
+  render() {
+    if (!this.$el) {
+      this.$el = this._createSkeleton();
+      jQuery(".js-main").append(this.$el);
+    }
+
+    this.$el.find(".js-shop-gold").text(Player.gold + "$");
+
+    // 1. Render Cards
+    const $cardsArea = this.$el.find(".js-area-cards");
+    $cardsArea.empty();
+    this.items.cards.forEach((item) => {
+      const $cardHtml = item.create("shop", {
+        onBuy: (clickedItem) => this.tryBuyItem(clickedItem),
+      });
+      $cardsArea.append($cardHtml);
+    });
+
+    // 2. Render Voucher
+    const $voucherArea = this.$el.find(".js-area-voucher");
+    $voucherArea.empty();
+    if (this.items.voucher) {
+      const $vHtml = this.items.voucher.create("shop", {
+        onBuy: (clickedItem) => this.tryBuyItem(clickedItem),
+      });
+      $voucherArea.append($vHtml);
+    } else {
+      $voucherArea.append('<div style="opacity:0.5; font-weight:bold;">SOLD OUT</div>');
+    }
+
+    // 3. Render Packs
+    const $packsArea = this.$el.find(".js-area-packs");
+    $packsArea.empty();
+    this.items.packs.forEach((pack) => {
+      const $pHtml = pack.create((clickedPack) => this.tryBuyPack(clickedPack));
+      $packsArea.append($pHtml);
+    });
+  }
+
+  _createSkeleton() {
+    return jQuery(`
+      <div class="shop-container">
+        <header class="shop-header">
+            <h1>Negozio</h1>
+            <div class="shop-gold js-shop-gold">0$</div>
+        </header>
+
+        <div class="shop-grid">
+            <div class="shop-section area-cards">
+                <span class="section-title">Offerte del Giorno</span>
+                <div class="section-content js-area-cards"></div>
+            </div>
+            
+            <div class="shop-section area-packs">
+                <span class="section-title">Buste</span>
+                <div class="section-content js-area-packs"></div>
+            </div>
+
+            <div class="shop-section area-voucher">
+                <span class="section-title">Voucher</span>
+                <div class="section-content js-area-voucher"></div>
+            </div>
+            
+            <div class="area-actions">
+                <button class="btn-shop-action btn-next js-btn-next">Prossima Tappa &rarr;</button>
+                <button class="btn-shop-action btn-reroll js-btn-reroll">Reroll Offerte (${Player.REROLL_COST}$)</button>
+            </div>
+        </div>
+      </div>
+    `);
+  }
+
+  bindEvents() {
+    this.$el
+      .find(".js-btn-next")
+      .off("click")
+      .on("click", () => {
+        this.$el.remove();
+        this.stageCallback();
+      });
+
+    this.$el
+      .find(".js-btn-reroll")
+      .off("click")
+      .on("click", () => {
+        if (Player.gold >= Player.REROLL_COST) {
+          Player.gold -= Player.REROLL_COST;
+          this._generateCards();
+          this.render();
+          WinAlert.show("REROLL", "Nuove offerte disponibili!");
+        } else {
+          WinAlert.show("POVERO", "Non hai abbastanza soldi per il Reroll!");
+        }
+      });
+  }
+
+  tryBuyItem(item) {
+    if (Player.gold < item.cost) {
+      WinAlert.show("POVERO", "Non hai abbastanza soldi!");
+      return;
+    }
+
+    const isJolly = item.rarity !== undefined;
+    const isVoucher = item.properties !== undefined && !isJolly && item.cost > 0;
+    const isUtility = item.tier !== undefined || item.effectType !== undefined;
+
+    // Check Spazio usando le costanti di Player
+    if (isJolly) {
+      if (Player.jollies.length >= Player.MAX_JOLLIES) {
+        WinAlert.show("PIENO", "Slot Jolly pieni!");
+        return;
+      }
+      Player.jollies.push(item);
+    } else if (isUtility) {
+      if (Player.consumables.length >= Player.MAX_CONSUMABLES) {
+        WinAlert.show("PIENO", "Inventario Consumabili pieno!");
+        return;
+      }
+      Player.consumables.push(item);
+    } else if (isVoucher) {
+      if (Player.vouchers.some((v) => v.id === item.id)) {
+        WinAlert.show("POSSEDUTO", "Hai già questo voucher!");
+        return;
+      }
+      Player.vouchers.push(item);
+      this.items.voucher = null;
+    }
+
+    Player.gold -= item.cost;
+
+    if (isJolly || isUtility) {
+      this.items.cards = this.items.cards.filter((i) => i !== item);
+    }
+
+    WinAlert.show("ACQUISTATO", `Hai comprato ${item.name}!`);
+    this.render();
+  }
+
+  tryBuyPack(pack) {
+    if (Player.gold < pack.cost) {
+      WinAlert.show("POVERO", "Non hai abbastanza soldi!");
+      return;
+    }
+
+    Player.gold -= pack.cost;
+    this.items.packs = this.items.packs.filter((p) => p !== pack);
+    this.render();
+
+    this.openBoosterPack(pack);
+  }
+
+  openBoosterPack(pack) {
+    const content = [];
+    const sourceData = pack.type === "jolly" ? ScoreSheet.JOLLY_DATA : ScoreSheet.SHOP_UTILITIES_DATA;
+    const pool = pack.type === "utility" ? [...sourceData, ...ScoreSheet.UPPERS_DATA] : sourceData;
+
+    for (let i = 0; i < pack.totalCards; i++) {
+      const rawData = this._getRandomItem(pool);
+      if (pack.type === "jolly") content.push(new Jolly(rawData));
+      else content.push(new Utility(rawData));
+    }
+
+    const $overlay = jQuery(`
+        <div class="booster-overlay">
+            <h2>${pack.name}</h2>
+            <div class="booster-info">Scegli ${pack.chooseCards} carte</div>
+            <div class="booster-cards-container"></div>
+        </div>
+      `);
+
+    const $container = $overlay.find(".booster-cards-container");
+    let chosenCount = 0;
+    let isInteractionLocked = false; // FLAG DI SICUREZZA
+
+    content.forEach((item) => {
+      const $card = item.create("inventory");
+      $card.find(".mini-footer, .jolly-footer").remove();
+
+      $card.on("click", () => {
+        // 1. BLOCCO IMMEDIATO: Se stiamo già processando o abbiamo finito, ignora click
+        if (isInteractionLocked || chosenCount >= pack.chooseCards) return;
+
+        const isJolly = item.rarity !== undefined;
+        const isUtility = item.tier !== undefined;
+
+        // Check Spazio
+        if (isJolly && Player.jollies.length >= Player.MAX_JOLLIES) {
+          WinAlert.show("PIENO", "Slot Jolly Pieni!");
+          return;
+        }
+        if (isUtility && Player.consumables.length >= Player.MAX_CONSUMABLES) {
+          WinAlert.show("PIENO", "Inventario Pieno!");
+          return;
+        }
+
+        // Aggiungi
+        if (isJolly) Player.jollies.push(item);
+        else Player.consumables.push(item);
+
+        chosenCount++;
+        $card.css({ opacity: 0, transform: "scale(0)" });
+
+        // Se abbiamo raggiunto il limite, BLOCCA TUTTO
+        if (chosenCount >= pack.chooseCards) {
+          isInteractionLocked = true; // Impedisce altri click sulle altre carte
+          $container.css("pointer-events", "none"); // Disabilita CSS per sicurezza visiva
+
+          setTimeout(() => {
+            $overlay.fadeOut(300, () => $overlay.remove());
+            WinAlert.show("COMPLETATO", "Carte aggiunte all'inventario!");
+            this.render();
+          }, 500);
+        }
+      });
+
+      $container.append($card);
+    });
+
+    jQuery("body").append($overlay);
+  }
+}
+===== END FILE: src/js/pages/sections/classes/Shop.js =====
+
+
 ===== FILE: src/js/pages/sections/classes/Stage.js =====
 import WinAlert from "../helpers/WinAlert";
 import Lowers from "./Lowers";
 import Player from "./Player";
 import Round from "./Round";
-import ScoreSheet from "./ScoreSheet";
 import StatsPanel from "./StatsPanel";
 import Uppers from "./Uppers";
-import jQuery from "jquery"; // Aggiunto import mancante se serve, o già presente
+import Utility from "./Utility";
+import Shop from "./Shop";
+import jQuery from "jquery";
+import ScoreSheet from "./ScoreSheet";
 
 export default class Stage {
   clip = null;
@@ -1761,19 +2097,20 @@ export default class Stage {
   lowers = [];
   uppers = [];
 
-  constructor(config) {
+  constructor(config, onStageComplete) {
     this.config = config;
+    this.onStageComplete = onStageComplete;
   }
 
   init() {
     this.createStageScreen();
     this.renderConsumables();
+    this.renderJollies();
     this.renderActiveEffects();
     this.nextRound();
   }
 
   nextRound() {
-    // --- 1. CLEANUP DEL ROUND PRECEDENTE ---
     this.clip.removeClass("input-locked");
     this.clip.find(".js-combinations-track").empty();
     this.clip.find(".js-dice-container").empty();
@@ -1792,23 +2129,24 @@ export default class Stage {
     round.init();
   }
 
+  // --- LOGICA GESTIONE FINE ROUND / TAPPA ---
   onRoundComplete() {
     let currentStageScore = 0;
     this.rounds.forEach((r) => (currentStageScore += r.state.score));
     const targetScore = this.config.toBeat;
 
-    // 2. CHECK VITTORIA TAPPA
+    // A. VITTORIA TAPPA
     if (currentStageScore >= targetScore) {
-      // AUTO-VENDITA TWOS SCADUTI
+      // Auto-Vendita e Pulizia
       [...Player.activeEffects].forEach((item) => {
         if (item.category === "UpperTwos" && item.tier === 0) {
           this.sellConsumable(item.id);
           WinAlert.show("SCADUTO", `Investimento scaduto! Venduto automaticamente per ${item.accumulatedValue}$`);
         }
       });
-
       this.cleanupEffects("stage");
 
+      // Rimuovi consumabili scaduti
       Player.consumables = Player.consumables.filter((item) => {
         if (item.category !== "UpperThrees" && item.tier === 0) return false;
         if (item.category === "UpperThrees") return false;
@@ -1816,20 +2154,60 @@ export default class Stage {
       });
       this.renderConsumables();
 
+      // APERTURA SHOP
       setTimeout(() => {
-        WinAlert.show("VITTORIA!", "TAPPA COMPLETATA!<br>(Qui ci sarà lo Shop)");
+        WinAlert.show("TAPPA COMPLETATA!", `Hai battuto il punteggio target!<br>Incasso Tappa: <b>${this.config.moneyReward || 5}$</b>`, () => {
+          Player.gold += this.config.moneyReward || 5;
+          this.updatePlayerStats(); // Aggiorna UI soldi
+
+          const shop = new Shop(() => {
+            if (this.onStageComplete) this.onStageComplete();
+          });
+          shop.init();
+          shop.bindEvents();
+        });
       }, 500);
       return;
     }
 
-    // 3. CHECK GAME OVER
+    // B. TARGET NON RAGGIUNTO E ROUND FINITI
     if (this.currentRoundIndex >= this.config.rounds - 1) {
-      this.triggerGameOver();
+      // CONTROLLO VITE
+      if (Player.lives > 1) {
+        Player.lives--;
+        this.updatePlayerStats();
+
+        WinAlert.ask(
+          "ATTENZIONE!",
+          `Non hai raggiunto il punteggio target.<br>Hai perso una vita. Te ne restano: <b>${Player.lives}</b>.<br>Vuoi ritentare la tappa?`,
+          () => {
+            // CONFERMA: Ritenta
+            this.retryStage();
+          },
+          () => {
+            // ANNULLA: Arrenditi
+            this.triggerGameOver();
+          },
+        );
+      } else {
+        // Vite finite
+        this.triggerGameOver();
+      }
       return;
     }
 
-    // 4. NEXT ROUND
+    // C. CONTINUA ROUND
     this.nextRound();
+  }
+
+  // Resetta la tappa corrente
+  retryStage() {
+    console.log("Retrying Stage...");
+    // Resetta indici e array round
+    this.currentRoundIndex = -1;
+    this.rounds = [];
+    // Rilancia init (ricrea schermo e resetta Lowers/Uppers dal config originale)
+    this.init();
   }
 
   triggerGameOver() {
@@ -1841,64 +2219,72 @@ export default class Stage {
   }
 
   createStageScreen() {
+    jQuery(".game-container").not("#template_screen_game").remove();
+
     this.clip = jQuery("#template_screen_game").clone();
     this.clip.removeAttr("id");
     jQuery(".js-main").append(this.clip);
     jQuery(".js-stage-name", this.clip).text(this.config.name);
+
     this.statsPanel = new StatsPanel(jQuery(".js-stats-panel", this.clip));
     this.statsPanel.init(this.config, this.rounds);
+
     this.lowers = new Lowers(this.clip, this.config.lowers.slice());
     this.lowers.init();
+
     this.uppers = new Uppers(this.clip, this.config.uppers.slice());
     this.uppers.init();
-    jQuery(".js-total-gold", this.clip).text(Player.gold + "$");
+
+    this.updatePlayerStats(); // Inizializza UI Stats
   }
 
+  // Helper per aggiornare Soldi e Vite
+  updatePlayerStats() {
+    jQuery(".js-total-gold", this.clip).text(Player.gold + "$");
+    // Aggiorna anche le vite (usa entità cuore HTML)
+    jQuery(".js-total-lives", this.clip).html(Player.lives + "&hearts;");
+  }
+
+  // ... acquireConsumable ...
   acquireConsumable(matchData, staticData) {
-    // --- ECCEZIONE: TWOS (Vanno diretti in ACTIVE) ---
+    let durationType = "round";
+    if (matchData.category === "UpperOnes") {
+      durationType = "round";
+    } else if (matchData.category === "UpperTwos") {
+      durationType = matchData.tier === 0 ? "stage" : "run";
+    } else {
+      durationType = matchData.tier === 0 ? "round" : "stage";
+    }
+
+    const sellValue = (staticData.baseValue || 0) + (matchData.tier || 0);
+
+    const utilityData = {
+      id: matchData.category + "_" + Date.now(),
+      category: matchData.category,
+      name: staticData.name,
+      description: matchData.tier === 0 ? staticData.tier0 : staticData.tier1,
+      tier: matchData.tier,
+      cost: 0,
+      sellValue: sellValue,
+      durationType: durationType,
+      accumulatedValue: matchData.category === "UpperTwos" ? 1 : 0,
+    };
+
+    const newItem = new Utility(utilityData);
+
     if (matchData.category === "UpperTwos") {
-      const item = {
-        id: matchData.category + "_" + Date.now(),
-        category: matchData.category,
-        name: staticData.name,
-        tier: matchData.tier,
-        description: matchData.tier === 0 ? staticData.tier0 : staticData.tier1,
-        durationType: matchData.tier === 0 ? "stage" : "run",
-        accumulatedValue: 1,
-      };
-      Player.activeEffects.push(item);
+      Player.activeEffects.push(newItem);
       this.renderActiveEffects();
-      WinAlert.show("INVESTIMENTO", `Hai ottenuto un investimento!<br>Valore attuale: <b>${item.accumulatedValue}$</b>`);
+      WinAlert.show("INVESTIMENTO", `Hai ottenuto un investimento!<br>Valore attuale: <b>${newItem.accumulatedValue}$</b>`);
       return true;
     }
+
     if (Player.consumables.length >= Player.MAX_CONSUMABLES) {
       WinAlert.show("INVENTARIO PIENO", "Non hai spazio per prendere questa carta.");
       return false;
     }
 
-    let durationType = "round";
-    if (matchData.category === "UpperOnes") {
-      durationType = "round";
-    } else {
-      durationType = matchData.tier === 0 ? "round" : "stage";
-    }
-
-    // CALCOLO VALORE DI VENDITA (Base + Tier Bonus)
-    // Tier 0 -> Base Value
-    // Tier 1 -> Base Value + 1
-    const sellValue = (staticData.baseValue || 0) + (matchData.tier || 0);
-
-    const consumableItem = {
-      id: matchData.category + "_" + Date.now(),
-      category: matchData.category,
-      name: staticData.name,
-      tier: matchData.tier,
-      description: matchData.tier === 0 ? staticData.tier0 : staticData.tier1,
-      durationType: durationType,
-      sellValue: sellValue, // NUOVO: Salviamo il valore
-    };
-
-    Player.consumables.push(consumableItem);
+    Player.consumables.push(newItem);
     this.renderConsumables();
     return true;
   }
@@ -1909,7 +2295,6 @@ export default class Stage {
 
     const item = Player.consumables[index];
 
-    // --- GESTIONE SPECIALE: THREES (ISTANTANEA) ---
     if (item.category === "UpperThrees") {
       Player.consumables.splice(index, 1);
       this.renderConsumables();
@@ -1944,13 +2329,33 @@ export default class Stage {
     this.renderActiveEffects();
   }
 
-  // --- RENDERERS UI ---
+  renderJollies() {
+    const $container = this.clip.find(".js-jolly-container");
+    $container.find(".jolly-card").remove();
+    $container.find(".placeholder-text").toggle(Player.jollies.length === 0);
+
+    Player.jollies.forEach((jolly) => {
+      const $card = jolly.create("inventory", {
+        onSell: (clickedJolly) => {
+          WinAlert.ask("VENDITA JOLLY", `Vuoi vendere <b>${clickedJolly.name}</b> per ${clickedJolly.sellValue}$?`, () => {
+            this.sellConsumable(clickedJolly.id); // Riutilizzo sellConsumable adattato o logica inline
+          });
+        },
+      });
+      $card.css("transform", "scale(0.85)");
+      $container.append($card);
+    });
+  }
 
   renderConsumables() {
     const $container = this.clip.find(".js-consumables-container");
     $container.find(".mini-card").remove();
+
     Player.consumables.forEach((item) => {
-      const $card = this._createMiniCard(item, true); // true = inventario
+      const $card = item.create("inventory", {
+        onUse: (u) => this.activateConsumable(u.id),
+        onSell: (u) => this.sellConsumable(u.id),
+      });
       $container.append($card);
     });
   }
@@ -1958,82 +2363,13 @@ export default class Stage {
   renderActiveEffects() {
     const $container = this.clip.find(".js-active-effects-container");
     $container.find(".mini-card").remove();
+
     Player.activeEffects.forEach((item) => {
-      const $card = this._createMiniCard(item, false); // false = attivo
-      $card.addClass("active-effect");
+      const $card = item.create("active", {
+        onSell: (u) => this.sellConsumable(u.id),
+      });
       $container.append($card);
     });
-  }
-
-  _createMiniCard(item, isInInventory) {
-    const displayTier = item.tier + 1;
-    const fullTitle = `${item.name} - Tier ${displayTier}`;
-    const tierClass = item.tier === 0 ? "tier-0" : "tier-1";
-
-    // --- VISUALIZZAZIONE VALORE ---
-    let dynamicValueHtml = "";
-    const baseStyle = "margin-bottom:5px; font-weight:900; font-size:12px; padding:2px; border-radius:4px; border:1px solid";
-
-    if (item.accumulatedValue !== undefined && item.accumulatedValue > 0 && item.category !== "UpperTwos") {
-      dynamicValueHtml = `<div style="${baseStyle} #D32F2F; color:#D32F2F;">+${item.accumulatedValue} Chips</div>`;
-    } else if (item.category === "UpperFours" && !isInInventory) {
-      dynamicValueHtml = `<div style="${baseStyle} #999; color:#999; font-weight:bold; font-size:11px;">+0 Chips</div>`;
-    } else if (item.category === "UpperFives" && !isInInventory) {
-      dynamicValueHtml = `<div style="${baseStyle} #D32F2F; color:#D32F2F;">+5 Mult</div>`;
-    } else if (item.category === "UpperSixes" && !isInInventory) {
-      dynamicValueHtml = `<div style="${baseStyle} #2E7D32; color:#2E7D32;">+50 Chips</div>`;
-    } else if (item.category === "UpperTwos") {
-      dynamicValueHtml = `<div style="${baseStyle} #DAA520; color:#FFD700; background:#FFF8E1; color:#B8860B;">Valore: ${item.accumulatedValue}$</div>`;
-    }
-
-    const $el = jQuery(`
-      <div class="mini-card">
-        <div class="mini-header ${tierClass}">${fullTitle}</div>
-        <div class="mini-body">
-            ${dynamicValueHtml}
-            <div class="mini-desc">${item.description}</div>
-        </div>
-        <div class="mini-footer"></div>
-      </div>
-    `);
-
-    const $footer = $el.find(".mini-footer");
-
-    // CASO A: INVENTARIO (Pulsanti USA e VENDI)
-    if (isInInventory) {
-      // Button USA
-      const $btn = jQuery('<button class="btn-mini-use">USA</button>');
-      $btn.on("click", () => {
-        if (this.clip.hasClass("input-locked")) return;
-        this.activateConsumable(item.id);
-      });
-      $footer.append($btn);
-
-      // Button VENDI (NUOVO)
-      // Mostriamo il valore di vendita nel pulsante
-      const sellLabel = `VENDI (${item.sellValue || 0}$)`;
-      const $btnSell = jQuery(`<button class="btn-mini-use" style="background:#D32F2F; margin-top:2px;">${sellLabel}</button>`);
-      $btnSell.on("click", () => {
-        // FIX CONFIRM -> WinAlert.ask
-        WinAlert.ask("VENDITA", `Vuoi vendere <b>${item.name}</b> per <b>${item.sellValue}$</b>?`, () => {
-          this.sellConsumable(item.id);
-        });
-      });
-      $footer.append($btnSell);
-    }
-    // CASO B: ATTIVA MA È UN "TWO" (Pulsante VENDI)
-    else if (item.category === "UpperTwos") {
-      const $btnSell = jQuery('<button class="btn-mini-use" style="background:#D32F2F;">VENDI</button>');
-      $btnSell.on("click", () => {
-        // FIX CONFIRM -> WinAlert.ask
-        WinAlert.ask("INCASSARE", `Vuoi incassare l'investimento?<br>Valore attuale: <b>${item.accumulatedValue}$</b>`, () => {
-          this.sellConsumable(item.id);
-        });
-      });
-      $footer.append($btnSell);
-    }
-
-    return $el;
   }
 
   // --- LOGICA TIER 1/2 THREES ---
@@ -2083,41 +2419,49 @@ export default class Stage {
       $overlay.remove();
       this.clip.removeClass("input-locked");
     });
-
     $box.append($list).append($confirmBtn);
     $overlay.append($box);
     jQuery("body").append($overlay);
   }
 
-  // --- METODO VENDITA AGGIORNATO ---
+  // --- METODO VENDITA UNIFICATO ---
   sellConsumable(itemId) {
-    // 1. Cerca nell'Inventario
+    // 1. Cerca nell'Inventario Consumabili
     let index = Player.consumables.findIndex((c) => c.id === itemId);
     let list = Player.consumables;
-    let isInventory = true;
+    let isJolly = false;
 
     // 2. Se non c'è, cerca in Active (per i Twos)
     if (index === -1) {
       index = Player.activeEffects.findIndex((c) => c.id === itemId);
       list = Player.activeEffects;
-      isInventory = false;
+    }
+
+    // 3. Se non c'è, cerca nei Jolly
+    if (index === -1) {
+      index = Player.jollies.findIndex((c) => c.id === itemId);
+      list = Player.jollies;
+      isJolly = true;
     }
 
     if (index === -1) return;
 
     const item = list[index];
-    // Se è inventario usa sellValue, se è attivo (Twos) usa accumulatedValue
-    const value = isInventory ? item.sellValue || 0 : item.accumulatedValue || 0;
+    // Se è Jolly o Consumabile usa sellValue, se è Two attivo usa accumulatedValue
+    const value = item.accumulatedValue > 0 ? item.accumulatedValue : item.sellValue || 0;
 
     // Esegui vendita
     Player.gold += value;
     list.splice(index, 1);
 
     // Aggiorna UI
-    if (isInventory) this.renderConsumables();
-    else this.renderActiveEffects();
+    if (isJolly) this.renderJollies();
+    else {
+      this.renderConsumables();
+      this.renderActiveEffects();
+    }
 
-    jQuery(".js-total-gold", this.clip).text(Player.gold + "$");
+    this.updatePlayerStats(); // Aggiorna Gold e Vite
     console.log(`Venduto ${item.name} per ${value}$`);
   }
 
@@ -2379,25 +2723,18 @@ export default class Voucher {
     this.description = data.description;
     this.cost = data.cost;
     this.properties = data.properties;
-    // Non c'è sellValue
   }
 
-  /**
-   * Crea l'elemento HTML della card
-   * @param {string} context - "shop" | "inventory"
-   * @param {Function} actionCallback - Funzione da eseguire al click (solo shop)
-   */
-  create(context, actionCallback) {
+  create(context, callbacks = {}) {
+    // <--- MODIFICATO
     const $card = jQuery(`
       <div class="voucher-card">
-        <div class="voucher-ticket-cutout"></div> <div class="voucher-header">
-            <span class="voucher-name">${this.name}</span>
-        </div>
-        
+        <div class="voucher-ticket-cutout"></div>
+        <div class="voucher-header"><span class="voucher-name">${this.name}</span></div>
         <div class="voucher-body">
-            <div class="voucher-icon">V</div> <div class="voucher-desc">${this.description}</div>
+            <div class="voucher-icon">V</div>
+            <div class="voucher-desc">${this.description}</div>
         </div>
-        
         <div class="voucher-footer"></div>
       </div>
     `);
@@ -2408,12 +2745,12 @@ export default class Voucher {
       const $btn = jQuery('<button class="btn-voucher-action btn-buy"></button>');
       $btn.text(`COMPRA (${this.cost}$)`);
 
+      // FIX: Usiamo callbacks.onBuy
       $btn.on("click", () => {
-        if (actionCallback) actionCallback(this);
+        if (callbacks.onBuy) callbacks.onBuy(this);
       });
       $footer.append($btn);
     } else {
-      // Nell'inventario è solo visuale
       const $lbl = jQuery('<div class="voucher-status">PERMANENTE</div>');
       $footer.append($lbl);
     }
@@ -2445,9 +2782,6 @@ import jQuery from "jquery";
 export default class WinAlert {
   /**
    * Mostra un messaggio informativo (Sostituisce alert)
-   * @param {string} title - Titolo della finestra
-   * @param {string} message - Messaggio
-   * @param {Function} onClose - Callback opzionale quando si chiude
    */
   static show(title, message, onClose = null) {
     WinAlert._createModal(title, message, [
@@ -2456,7 +2790,7 @@ export default class WinAlert {
         class: "btn-main",
         onClick: () => {
           if (onClose) onClose();
-          return true; // Chiude il modale
+          return true;
         },
       },
     ]);
@@ -2464,24 +2798,25 @@ export default class WinAlert {
 
   /**
    * Chiede conferma all'utente (Sostituisce confirm)
-   * @param {string} title
-   * @param {string} message
-   * @param {Function} onConfirm - Callback eseguita SOLO se preme conferma
+   * Aggiunto onCancel per gestire il rifiuto
    */
-  static ask(title, message, onConfirm) {
+  static ask(title, message, onConfirm, onCancel = null) {
     WinAlert._createModal(title, message, [
       {
         label: "ANNULLA",
         class: "btn-main",
-        style: "background:#ccc; border-color:#999; color:#333;", // Stile grigio per annulla
-        onClick: () => true, // Chiude e basta
+        style: "background:#ccc; border-color:#999; color:#333;",
+        onClick: () => {
+          if (onCancel) onCancel(); // Esegue callback annulla
+          return true;
+        },
       },
       {
         label: "CONFERMA",
         class: "btn-main",
         onClick: () => {
           if (onConfirm) onConfirm();
-          return true; // Chiude
+          return true;
         },
       },
     ]);
@@ -3897,6 +4232,185 @@ body {
     .pack-name {
       color: #FFEB3B; // Oro
     }
+  }
+}
+
+// --- SHOP SCREEN ---
+.shop-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #f4f4f4; // Sfondo grigio chiaro
+  z-index: 100; // Sopra al gioco
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+
+  .shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 4px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .shop-gold {
+      font-size: 24px;
+      font-weight: 900;
+      color: #D84315;
+    }
+  }
+
+  .shop-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr; // Due colonne principali
+    grid-template-rows: 1fr 1fr; // Due righe
+    gap: 20px;
+  }
+
+  // Stile comune per le sezioni
+  .shop-section {
+    background: #fff;
+    border: 2px solid #000;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    .section-title {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: #000;
+      color: #fff;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .section-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center; // Centra le carte
+      gap: 20px;
+    }
+  }
+
+  // Layout Specifico Aree
+  .area-cards {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+    // Alto Sinistra
+  }
+
+  .area-packs {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+    // Alto Destra (Prima erano i Voucher)
+  }
+
+  .area-voucher {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    // Basso Sinistra (Prima erano i Pacchetti)
+  }
+
+  // Area Azioni (Next / Reroll)
+  .area-actions {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    background: transparent; // Trasparente per le azioni
+    border: none;
+  }
+
+  .btn-shop-action {
+    width: 80%;
+    padding: 20px;
+    font-size: 18px;
+    text-transform: uppercase;
+    font-weight: 900;
+    border: 3px solid #000;
+    cursor: pointer;
+    transition: transform 0.1s;
+
+    &.btn-next {
+      background-color: #2E7D32;
+      color: #fff;
+
+      &:hover {
+        background-color: #1B5E20;
+      }
+    }
+
+    &.btn-reroll {
+      background-color: #F57F17;
+      color: #fff;
+
+      &:hover {
+        background-color: #E65100;
+      }
+    }
+  }
+}
+
+// --- BOOSTER OPENING OVERLAY ---
+.booster-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  h2 {
+    color: #fff;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .booster-cards-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+
+    // Le carte qui devono essere cliccabili
+    .mini-card,
+    .jolly-card {
+      cursor: pointer;
+
+      &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px #fff;
+      }
+    }
+  }
+
+  .booster-info {
+    color: #ccc;
+    font-weight: bold;
   }
 }
 ===== END FILE: src/scss/src/_main.scss =====

@@ -10,26 +10,18 @@ export default class Voucher {
   }
 
   create(context, callbacks = {}) {
-    // <--- MODIFICATO
-    const $card = jQuery(`
-      <div class="voucher-card">
-        <div class="voucher-ticket-cutout"></div>
-        <div class="voucher-header"><span class="voucher-name">${this.name}</span></div>
-        <div class="voucher-body">
-            <div class="voucher-icon">V</div>
-            <div class="voucher-desc">${this.description}</div>
-        </div>
-        <div class="voucher-footer"></div>
-      </div>
-    `);
+    // CLONA TEMPLATE
+    const $card = jQuery("#template_voucher_card").clone().removeAttr("id");
+
+    // POPOLA DATI
+    $card.find(".voucher-name").text(this.name);
+    $card.find(".voucher-desc").text(this.description);
 
     const $footer = $card.find(".voucher-footer");
 
     if (context === "shop") {
       const $btn = jQuery('<button class="btn-voucher-action btn-buy"></button>');
       $btn.text(`COMPRA (${this.cost}$)`);
-
-      // FIX: Usiamo callbacks.onBuy
       $btn.on("click", () => {
         if (callbacks.onBuy) callbacks.onBuy(this);
       });

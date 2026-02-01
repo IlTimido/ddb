@@ -12,51 +12,34 @@ export default class Jolly {
     this.properties = data.properties;
   }
 
-  /**
-   * Crea l'elemento HTML della card
-   * @param {string} context - "shop" | "inventory"
-   * @param {Object} callbacks - { onBuy, onSell }
-   */
   create(context, callbacks = {}) {
-    // <--- MODIFICATO
     const rarityClass = this.rarity.toLowerCase();
 
-    const $card = jQuery(`
-      <div class="jolly-card rarity-${rarityClass}">
-        <div class="jolly-header">
-            <span class="jolly-name">${this.name}</span>
-        </div>
-        <div class="jolly-art">
-            <div class="jolly-placeholder">${this.name.charAt(0)}</div>
-        </div>
-        <div class="jolly-body">
-            <div class="jolly-rarity">${this.rarity}</div>
-            <div class="jolly-desc">${this.description}</div>
-        </div>
-        <div class="jolly-footer"></div>
-      </div>
-    `);
+    // CLONA TEMPLATE
+    const $card = jQuery("#template_jolly_card").clone().removeAttr("id");
 
-    const $footer = $card.find(".jolly-footer");
-    const $btn = jQuery('<button class="btn-jolly-action"></button>');
+    // POPOLA DATI
+    $card.addClass(`rarity-${rarityClass}`);
+    $card.find(".jolly-name").text(this.name);
+    $card.find(".jolly-placeholder").text(this.name.charAt(0));
+    $card.find(".jolly-rarity").text(this.rarity);
+    $card.find(".jolly-desc").text(this.description);
+
+    const $btn = $card.find(".js-btn-action");
 
     if (context === "shop") {
       $btn.text(`COMPRA (${this.cost}$)`);
       $btn.addClass("btn-buy");
-      // FIX: Usiamo callbacks.onBuy
       $btn.on("click", () => {
         if (callbacks.onBuy) callbacks.onBuy(this);
       });
     } else {
       $btn.text(`VENDI (${this.sellValue}$)`);
       $btn.addClass("btn-sell");
-      // FIX: Usiamo callbacks.onSell
       $btn.on("click", () => {
         if (callbacks.onSell) callbacks.onSell(this);
       });
     }
-
-    $footer.append($btn);
 
     return $card;
   }

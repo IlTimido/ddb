@@ -24,35 +24,28 @@ export default class Shop {
     this.render();
   }
 
-  // --- LOGICA GENERAZIONE ---
   generateItems() {
     this.items.cards = [];
     this.items.packs = [];
     this.items.voucher = null;
 
-    // 1. Genera le Carte (Offerte del Giorno)
     this._generateCards();
 
-    // 2. Un Voucher
     const availableVouchers = ScoreSheet.VOUCHERS_DATA.filter((v) => !Player.vouchers.some((pv) => pv.id === v.id));
     if (availableVouchers.length > 0) {
       const randomVoucher = availableVouchers[Math.floor(Math.random() * availableVouchers.length)];
       this.items.voucher = new Voucher(randomVoucher);
     }
 
-    // 3. Genera Pacchetti (Usa variabile Player)
     for (let i = 0; i < Player.SHOP_BOOSTER_PACKS; i++) {
       const randomPack = this._getRandomItem(ScoreSheet.BOOSTERS_DATA);
       this.items.packs.push(new BoosterPack(randomPack));
     }
   }
 
-  // --- Genera solo le carte (usato anche dal Reroll) ---
   _generateCards() {
     this.items.cards = [];
-    // Usa variabile Player
     for (let i = 0; i < Player.SHOP_DAILY_CARDS; i++) {
-      // 50% Jolly, 50% Utility
       if (Math.random() > 0.5) {
         const randomJolly = this._getRandomItem(ScoreSheet.JOLLY_DATA);
         this.items.cards.push(new Jolly(randomJolly));
@@ -67,16 +60,15 @@ export default class Shop {
     return list[Math.floor(Math.random() * list.length)];
   }
 
-  // --- RENDER UI ---
   render() {
     if (!this.$el) {
       this.$el = this._createSkeleton();
       jQuery(".js-main").append(this.$el);
+      this.bindEvents(); // Bind events only once when skeleton is created
     }
 
     this.$el.find(".js-shop-gold").text(Player.gold + "$");
 
-    // 1. Render Cards
     const $cardsArea = this.$el.find(".js-area-cards");
     $cardsArea.empty();
     this.items.cards.forEach((item) => {
@@ -86,7 +78,6 @@ export default class Shop {
       $cardsArea.append($cardHtml);
     });
 
-    // 2. Render Voucher
     const $voucherArea = this.$el.find(".js-area-voucher");
     $voucherArea.empty();
     if (this.items.voucher) {
@@ -98,7 +89,6 @@ export default class Shop {
       $voucherArea.append('<div style="opacity:0.5; font-weight:bold;">SOLD OUT</div>');
     }
 
-    // 3. Render Packs
     const $packsArea = this.$el.find(".js-area-packs");
     $packsArea.empty();
     this.items.packs.forEach((pack) => {
@@ -108,36 +98,8 @@ export default class Shop {
   }
 
   _createSkeleton() {
-    return jQuery(`
-      <div class="shop-container">
-        <header class="shop-header">
-            <h1>Negozio</h1>
-            <div class="shop-gold js-shop-gold">0$</div>
-        </header>
-
-        <div class="shop-grid">
-            <div class="shop-section area-cards">
-                <span class="section-title">Offerte del Giorno</span>
-                <div class="section-content js-area-cards"></div>
-            </div>
-            
-            <div class="shop-section area-packs">
-                <span class="section-title">Buste</span>
-                <div class="section-content js-area-packs"></div>
-            </div>
-
-            <div class="shop-section area-voucher">
-                <span class="section-title">Voucher</span>
-                <div class="section-content js-area-voucher"></div>
-            </div>
-            
-            <div class="area-actions">
-                <button class="btn-shop-action btn-next js-btn-next">Prossima Tappa &rarr;</button>
-                <button class="btn-shop-action btn-reroll js-btn-reroll">Reroll Offerte (${Player.REROLL_COST}$)</button>
-            </div>
-        </div>
-      </div>
-    `);
+    // CLONA TEMPLATE SHOP SCREEN
+    return jQuery("#template_shop_screen").clone().removeAttr("id");
   }
 
   bindEvents() {
@@ -149,6 +111,7 @@ export default class Shop {
         this.stageCallback();
       });
 
+    this.$el.find(".js-btn-reroll").text(`Reroll Offerte (${Player.REROLL_COST}$)`);
     this.$el
       .find(".js-btn-reroll")
       .off("click")
@@ -174,7 +137,6 @@ export default class Shop {
     const isVoucher = item.properties !== undefined && !isJolly && item.cost > 0;
     const isUtility = item.tier !== undefined || item.effectType !== undefined;
 
-    // Check Spazio usando le costanti di Player
     if (isJolly) {
       if (Player.jollies.length >= Player.MAX_JOLLIES) {
         WinAlert.show("PIENO", "Slot Jolly pieni!");
@@ -197,7 +159,6 @@ export default class Shop {
     }
 
     Player.gold -= item.cost;
-
     if (isJolly || isUtility) {
       this.items.cards = this.items.cards.filter((i) => i !== item);
     }
@@ -230,30 +191,26 @@ export default class Shop {
       else content.push(new Utility(rawData));
     }
 
-    const $overlay = jQuery(`
-        <div class="booster-overlay">
-            <h2>${pack.name}</h2>
-            <div class="booster-info">Scegli ${pack.chooseCards} carte</div>
-            <div class="booster-cards-container"></div>
-        </div>
-      `);
+    // CLONA TEMPLATE OVERLAY
+    const $overlay = jQuery("#template_booster_overlay").clone().removeAttr("id");
 
-    const $container = $overlay.find(".booster-cards-container");
+    $overlay.find(".js-title").text(pack.name);
+    $overlay.find(".js-info").text(`Scegli ${pack.chooseCards} carte`);
+
+    const $container = $overlay.find(".js-container");
     let chosenCount = 0;
-    let isInteractionLocked = false; // FLAG DI SICUREZZA
+    let isInteractionLocked = false;
 
     content.forEach((item) => {
       const $card = item.create("inventory");
       $card.find(".mini-footer, .jolly-footer").remove();
 
       $card.on("click", () => {
-        // 1. BLOCCO IMMEDIATO: Se stiamo già processando o abbiamo finito, ignora click
         if (isInteractionLocked || chosenCount >= pack.chooseCards) return;
 
         const isJolly = item.rarity !== undefined;
         const isUtility = item.tier !== undefined;
 
-        // Check Spazio
         if (isJolly && Player.jollies.length >= Player.MAX_JOLLIES) {
           WinAlert.show("PIENO", "Slot Jolly Pieni!");
           return;
@@ -263,17 +220,15 @@ export default class Shop {
           return;
         }
 
-        // Aggiungi
         if (isJolly) Player.jollies.push(item);
         else Player.consumables.push(item);
 
         chosenCount++;
         $card.css({ opacity: 0, transform: "scale(0)" });
 
-        // Se abbiamo raggiunto il limite, BLOCCA TUTTO
         if (chosenCount >= pack.chooseCards) {
-          isInteractionLocked = true; // Impedisce altri click sulle altre carte
-          $container.css("pointer-events", "none"); // Disabilita CSS per sicurezza visiva
+          isInteractionLocked = true;
+          $container.css("pointer-events", "none");
 
           setTimeout(() => {
             $overlay.fadeOut(300, () => $overlay.remove());

@@ -1,12 +1,6 @@
 import jQuery from "jquery";
 
 export default class WinAlert {
-  /**
-   * Mostra un messaggio informativo (Sostituisce alert)
-   * @param {string} title - Titolo della finestra
-   * @param {string} message - Messaggio
-   * @param {Function} onClose - Callback opzionale quando si chiude
-   */
   static show(title, message, onClose = null) {
     WinAlert._createModal(title, message, [
       {
@@ -14,50 +8,42 @@ export default class WinAlert {
         class: "btn-main",
         onClick: () => {
           if (onClose) onClose();
-          return true; // Chiude il modale
+          return true;
         },
       },
     ]);
   }
 
-  /**
-   * Chiede conferma all'utente (Sostituisce confirm)
-   * @param {string} title
-   * @param {string} message
-   * @param {Function} onConfirm - Callback eseguita SOLO se preme conferma
-   */
-  static ask(title, message, onConfirm) {
+  static ask(title, message, onConfirm, onCancel = null) {
     WinAlert._createModal(title, message, [
       {
         label: "ANNULLA",
         class: "btn-main",
-        style: "background:#ccc; border-color:#999; color:#333;", // Stile grigio per annulla
-        onClick: () => true, // Chiude e basta
+        style: "background:#ccc; border-color:#999; color:#333;",
+        onClick: () => {
+          if (onCancel) onCancel();
+          return true;
+        },
       },
       {
         label: "CONFERMA",
         class: "btn-main",
         onClick: () => {
           if (onConfirm) onConfirm();
-          return true; // Chiude
+          return true;
         },
       },
     ]);
   }
 
-  // Metodo privato per costruire l'HTML
   static _createModal(title, message, buttons) {
-    const $overlay = jQuery('<div class="win-alert-overlay"></div>');
-    const $box = jQuery('<div class="win-alert-box"></div>');
+    // CLONA TEMPLATE WIN ALERT
+    const $overlay = jQuery("#template_win_alert").clone().removeAttr("id");
 
-    // Header
-    $box.append(`<div class="alert-header">${title}</div>`);
+    $overlay.find(".js-title").text(title);
+    $overlay.find(".js-message").html(message); // Usa html per supportare <br>
 
-    // Body
-    $box.append(`<div class="alert-body">${message}</div>`);
-
-    // Footer (Bottoni)
-    const $footer = jQuery('<div class="alert-footer"></div>');
+    const $footer = $overlay.find(".js-footer");
 
     buttons.forEach((btnConfig) => {
       const $btn = jQuery(`<button class="${btnConfig.class}">${btnConfig.label}</button>`);
@@ -71,8 +57,6 @@ export default class WinAlert {
       $footer.append($btn);
     });
 
-    $box.append($footer);
-    $overlay.append($box);
     jQuery("body").append($overlay);
   }
 }

@@ -46,6 +46,8 @@
             <div class="stat-row">Round: <span class="val js-round-current">1</span></div>
             <div class="stat-row">Lanci rimanenti: <span class="val js-rolls-left">3</span></div>
             <hr class="stat-sep">
+            <div class="stat-row stat-lives" style="color:#D32F2F; margin-bottom: 5px;">Vite: <span
+                class="val js-total-lives">2&hearts;</span></div>
             <div class="stat-row stat-gold">Gold: <span class="val js-total-gold">0$</span></div>
           </div>
         </aside>
@@ -110,6 +112,123 @@
         <button class="btn-action js-btn-action">USA</button>
       </div>
     </div>
+
+
+
+
+    <div id="template_jolly_card" class="jolly-card">
+      <div class="jolly-header">
+        <span class="jolly-name">NOME JOLLY</span>
+      </div>
+      <div class="jolly-art">
+        <div class="jolly-placeholder">?</div>
+      </div>
+      <div class="jolly-body">
+        <div class="jolly-rarity">RARITY</div>
+        <div class="jolly-desc">Descrizione...</div>
+      </div>
+      <div class="jolly-footer">
+        <button class="btn-jolly-action js-btn-action">AZIONE</button>
+      </div>
+    </div>
+
+    <div id="template_voucher_card" class="voucher-card">
+      <div class="voucher-ticket-cutout"></div>
+      <div class="voucher-header"><span class="voucher-name">NOME VOUCHER</span></div>
+      <div class="voucher-body">
+        <div class="voucher-icon">V</div>
+        <div class="voucher-desc">Descrizione...</div>
+      </div>
+      <div class="voucher-footer">
+      </div>
+    </div>
+
+    <div id="template_mini_card" class="mini-card">
+      <div class="mini-header js-header">TITOLO</div>
+      <div class="mini-body">
+        <div class="js-dynamic-val"></div>
+        <div class="mini-desc js-desc">Descrizione...</div>
+      </div>
+      <div class="mini-footer js-footer"></div>
+    </div>
+
+    <div id="template_booster_pack" class="booster-pack">
+      <div class="pack-wrapper">
+        <div class="pack-top"></div>
+        <div class="pack-body">
+          <div class="pack-name js-name">NOME</div>
+          <div class="pack-info">
+            <span class="js-count">0 Carte</span>
+          </div>
+        </div>
+        <div class="pack-bottom"></div>
+      </div>
+      <div class="pack-footer">
+        <button class="btn-pack-buy js-btn-buy">COMPRA</button>
+      </div>
+    </div>
+
+    <div id="template_shop_screen" class="shop-container">
+      <header class="shop-header">
+        <h1>Negozio</h1>
+        <div class="shop-gold js-shop-gold">0$</div>
+      </header>
+
+      <div class="shop-grid">
+        <div class="shop-section area-cards">
+          <span class="section-title">Offerte del Giorno</span>
+          <div class="section-content js-area-cards"></div>
+        </div>
+
+        <div class="shop-section area-packs">
+          <span class="section-title">Buste</span>
+          <div class="section-content js-area-packs"></div>
+        </div>
+
+        <div class="shop-section area-voucher">
+          <span class="section-title">Voucher</span>
+          <div class="section-content js-area-voucher"></div>
+        </div>
+
+        <div class="area-actions">
+          <button class="btn-shop-action btn-next js-btn-next">Prossima Tappa &rarr;</button>
+          <button class="btn-shop-action btn-reroll js-btn-reroll">Reroll Offerte</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="template_booster_overlay" class="booster-overlay">
+      <h2 class="js-title">NOME PACK</h2>
+      <div class="booster-info js-info">Info...</div>
+      <div class="booster-cards-container js-container"></div>
+    </div>
+
+    <div id="template_win_alert" class="win-alert-overlay">
+      <div class="win-alert-box">
+        <div class="alert-header js-title">TITOLO</div>
+        <div class="alert-body js-message">Messaggio...</div>
+        <div class="alert-footer js-footer"></div>
+      </div>
+    </div>
+
+    <div id="template_selection_overlay" class="selection-overlay">
+      <div class="selection-box">
+        <h2 class="js-title">TITOLO</h2>
+        <div class="selection-list js-list"></div>
+        <button class="btn-main js-btn-confirm" style="width:100%">CONFERMA</button>
+      </div>
+    </div>
+
+    <label id="template_selection_item" class="selection-item">
+      <input type="checkbox" class="js-sel-check">
+      <span class="js-name">Nome</span>
+    </label>
+
+    <div id="template_game_over" class="game-over-overlay">
+      GAME OVER<br><span style="font-size:20px">Click to Restart</span>
+    </div>
+
+
   </div>
 
   <script type="module" src="./src/js/FactoryManager.js"></script>
