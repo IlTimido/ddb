@@ -79,13 +79,23 @@ body {
 
 // Layout Principale Fisso
 .game-container {
-  width: 1280px; // Larghezza fissa Desktop
-  height: 850px; // Altezza fissa (o min-height)
+  width: 1440px; // *** MODIFICATO: Era 1280px ***
+  height: 900px; // *** MODIFICATO: Era 850px ***
   background-color: #fff;
   border: 2px solid #000;
   box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
+
+  // Transizione fluida per l'opacità (se vogliamo un feedback visivo del lock)
+  transition: opacity 0.2s;
+
+  // *** NUOVO: Classe per bloccare tutti i click ***
+  &.input-locked {
+    pointer-events: none; // Disabilita qualsiasi click al suo interno
+    opacity: 0.95; // Leggero feedback visivo (opzionale)
+    cursor: wait; // Cambia il cursore in clessidra/attesa
+  }
 }
 
 // --- HEADER ---
@@ -219,24 +229,54 @@ body {
   display: flex;
   gap: 15px;
   // MODIFICATO: Aumentata altezza per dare più spazio (era 120px)
-  flex: 0 0 200px;
+  flex: 0 0 250px; // *** MODIFICATO: Era 200px ***
   margin-bottom: 15px; // Un po' di aria sotto
 
   .bonus-box {
     flex: 1;
     border: 2px solid #000;
+
+    // *** FIX QUI: Importante per bloccare il testo assoluto al suo interno ***
+    position: relative;
+
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start; // Allinea le card a sinistra
+    gap: 10px;
+    padding: 10px;
     background: #fff;
 
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    min-width: 0;
+
     .placeholder-text {
-      color: #000; // MODIFICATO: Era arancione
+      color: #000;
       font-weight: bold;
-      font-size: 18px;
-      text-align: center;
+      font-size: 14px;
       text-transform: uppercase;
-      opacity: 0.3; // Lo rendo un po' tenue per non disturbare
+      opacity: 0.2;
+
+      // Ora questo funzionerà correttamente riferendosi al .bonus-box
+      position: absolute;
+      pointer-events: none;
+      width: 100%;
+      text-align: center;
+      left: 0;
+
+      // Assicuriamoci che stia SOTTO le card
+      z-index: 0;
+    }
+
+    // Scrollbar stilizzata
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
     }
   }
 }
@@ -606,4 +646,329 @@ body {
   opacity: 0;
   transform: scale(0.8);
   transition: all 0.3s ease-out;
+}
+
+
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9); // Sfondo nero quasi totale
+  color: #D32F2F; // Rosso sangue
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999; // Sopra a tutto
+  font-family: 'Open Sans', sans-serif;
+  font-size: 80px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 5px;
+  cursor: pointer;
+  text-align: center;
+
+  // Animazione semplice di entrata
+  animation: fadeIn 0.5s ease-out forwards;
+
+  span {
+    color: #fff;
+    margin-top: 20px;
+    font-weight: normal;
+    opacity: 0.8;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+// --- STILE MINI CARD (Per l'inventario) ---
+// --- STILE MINI CARD (Inventario & Attivi) ---
+.mini-card {
+  display: inline-flex;
+  flex-direction: column;
+
+  // AUMENTATO: Più larghe e più alte per far stare il testo
+  width: 120px;
+  height: 220px; // *** MODIFICATO: Era 170px ***
+
+  border: 2px solid #000;
+  border-radius: 6px;
+  background: #fff;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
+  margin-right: 8px;
+  white-space: normal;
+  transition: transform 0.1s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &.active-effect {
+    border-color: #2E7D32;
+    box-shadow: 0 0 5px #2E7D32;
+  }
+
+  .mini-header {
+    padding: 4px 2px;
+    text-align: center;
+    font-size: 11px; // Un po' più grande anche il titolo
+    font-weight: 800;
+    border-bottom: 2px solid #000;
+    min-height: 32px; // Altezza minima per titoli su due righe
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+    color: #000;
+    text-transform: uppercase;
+
+    // --- COLORI TIER ---
+    &.tier-0 {
+      background-color: #B3E5FC; // Azzurro Chiaro (Round)
+    }
+
+    &.tier-1 {
+      background-color: #FFCC80; // Arancio/Oro (Stage)
+    }
+  }
+
+  .mini-body {
+    flex: 1;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; // Testo in alto
+    align-items: center;
+    text-align: center;
+    overflow-y: auto; // Se il testo è lunghissimo, scrolla dentro la card
+
+    // Nascondiamo la scrollbar interna per pulizia estetica
+    &::-webkit-scrollbar {
+      width: 0;
+    }
+  }
+
+  // Descrizione Grande
+  .mini-desc {
+    font-size: 11px; // AUMENTATO come richiesto
+    line-height: 1.3;
+    color: #333;
+    font-weight: 600;
+  }
+
+  .btn-mini-use {
+    margin: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    background: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    padding: 8px 0;
+    width: 90%;
+    align-self: center;
+    text-transform: uppercase;
+    border-radius: 4px;
+
+    &:hover {
+      background: #333;
+    }
+
+    &.disabled {
+      display: none;
+    }
+  }
+}
+
+// --- ANIMAZIONE CONTATORE (Visual Feedback) ---
+@keyframes popGreen {
+  0% {
+    transform: scale(1);
+    color: inherit;
+  }
+
+  30% {
+    transform: scale(1.8);
+    color: #2E7D32;
+    font-weight: 900;
+  }
+
+  100% {
+    transform: scale(1);
+    color: inherit;
+  }
+}
+
+.pop-green {
+  animation: popGreen 0.8s ease-out;
+}
+
+// --- MODALE SELEZIONE (Tier 2 Threes) ---
+.selection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.selection-box {
+  background: #fff;
+  border: 4px solid #000;
+  padding: 20px;
+  width: 400px;
+  max-width: 90%;
+  border-radius: 8px;
+  box-shadow: 10px 10px 0 #000;
+
+  h2 {
+    margin-top: 0;
+    text-transform: uppercase;
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+  }
+}
+
+.selection-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr; // Due colonne
+  gap: 10px;
+  margin: 20px 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.selection-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+
+  &:hover {
+    background: #f0f0f0;
+  }
+
+  input {
+    transform: scale(1.5); // Checkbox più grande
+    cursor: pointer;
+  }
+}
+
+// --- WIN ALERT (Custom Layer) ---
+.win-alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7); // Sfondo scuro semitrasparente
+  z-index: 20000; // Sopra a tutto (anche al modale di selezione)
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.win-alert-box {
+  background: #fff;
+  border: 4px solid #000;
+  border-radius: 8px;
+  padding: 0; // Padding gestito internamente
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 15px 15px 0 rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  .alert-header {
+    background: #000;
+    color: #fff;
+    padding: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-align: center;
+    font-size: 18px;
+    letter-spacing: 1px;
+  }
+
+  .alert-body {
+    padding: 20px;
+    font-size: 16px;
+    text-align: center;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  .alert-footer {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  }
+}
+
+// Animazione di entrata
+@keyframes scaleUp {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// --- ANIMAZIONE DADI (POP-IN ROTANTE) ---
+@keyframes roll-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.1) rotate(-360deg); // Parte minuscolo e ruotato
+    filter: blur(4px); // Molto sfocato (così non leggi il numero!)
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.2) rotate(10deg); // "Rimbalza" diventando un po' più grande
+    filter: blur(2px);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg); // Si ferma normale e nitido
+    filter: blur(0);
+  }
+}
+
+.dice-rolling {
+  .dice {
+    animation: roll-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    // Il cubic-bezier da quell'effetto "elastico" alla fine
+  }
 }

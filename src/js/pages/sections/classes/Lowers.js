@@ -1,19 +1,11 @@
 import jQuery from "jquery";
-import ScoreSheet from "./ScoreSheet.js"; // Importiamo per accedere ai dati statici
+import ScoreSheet from "./ScoreSheet.js";
 
 export default class Lowers {
-  /**
-   * @param {jQuery} $context - Il contenitore principale dello Stage (this.clip)
-   * @param {string[]} lowersList - Array di stringhe (es. ["LowerChance", "LowerPair"])
-   */
   constructor($context, lowersList) {
     this.$context = $context;
     this.dataList = lowersList;
-
-    // Trova il contenitore specifico all'interno del contesto
     this.$container = this.$context.find(".js-lower-list");
-
-    // Array dove salveremo gli oggetti { entry: "LowerPair", clip: jQueryObject }
     this.items = [];
   }
 
@@ -22,17 +14,14 @@ export default class Lowers {
   }
 
   _render() {
-    // 1. Pulisce il contenitore
     this.$container.empty();
     this.items = [];
 
-    // 2. Conta le occorrenze
     const counts = this.dataList.reduce((acc, curr) => {
       acc[curr] = (acc[curr] || 0) + 1;
       return acc;
     }, {});
 
-    // 3. Itera sulle chiavi e crea i clip
     Object.keys(counts).forEach((entryName) => {
       const count = counts[entryName];
       this._createItem(entryName, count);
@@ -40,64 +29,113 @@ export default class Lowers {
   }
 
   _createItem(entryName, count) {
-    // Clona il template
     const $el = jQuery("#template_list_entry").clone().removeAttr("id");
-
-    // --- MODIFICA 1: DECODIFICA NOME ---
-    // Cerca l'oggetto corrispondente in ScoreSheet.LOWERS_DATA
     const staticData = ScoreSheet.LOWERS_DATA.find((d) => d.entry === entryName);
-
-    // Se lo trova usa il .name (es. "Pair"), altrimenti usa l'ID grezzo come fallback
     const displayName = staticData ? staticData.name : entryName;
 
-    // Popola i dati visivi
-    $el.find(".entry-name").text(displayName);
-    $el.find(".entry-count").text(`(${count})`);
+    // --- MODIFICA 1: GESTIONE INFINITO ---
+    const isInfinite = staticData && staticData.infinite;
 
-    // Aggiunge al DOM
+    $el.find(".entry-name").text(displayName);
+
+    if (isInfinite) {
+      // Usiamo l'entità HTML per l'infinito
+      $el.find(".entry-count").html("(&infin;)");
+    } else {
+      $el.find(".entry-count").text(`(${count})`);
+    }
+
     this.$container.append($el);
 
-    // Salva il riferimento
     this.items.push({
       entry: entryName,
       clip: $el,
+      consumed: false,
+      infinite: isInfinite, // Salviamo questa info per dopo
     });
   }
 
-  /**
-   * Restituisce il clip jQuery associato al nome della entry
-   * @param {string} entryName
-   * @returns {jQuery|null}
-   */
   getClip(entryName) {
     const found = this.items.find((item) => item.entry === entryName);
     return found ? found.clip : null;
   }
 
-  // --- MODIFICA 2: GESTIONE HIGHLIGHT ---
+  // --- MODIFICA 2: IMPEDIRE IL CONSUMO ---
+  consume(entryName) {
+    const item = this.items.find((item) => item.entry === entryName);
 
-  /**
-   * Attiva o disattiva l'evidenziazione per una specifica entry
-   * @param {string} entryName - L'ID della entry (es. ScoreSheet.LOWER_PAIR)
-   * @param {boolean} enable - true per accendere, false per spegnere
-   */
-  highlight(entryName, enable = true) {
-    const item = this.items.find((i) => i.entry === entryName);
+    // Se è infinita (Chance), non facciamo nulla
+    if (item && item.infinite) return;
+
     if (item) {
-      if (enable) {
-        item.clip.addClass("highlight");
+      // 1. Rimuoviamo UNA istanza dalla lista logica (dataList)
+      const indexInData = this.dataList.indexOf(entryName);
+      if (indexInData > -1) {
+        this.dataList.splice(indexInData, 1);
+      }
+
+      // 2. Calcoliamo quante ne rimangono
+      const remaining = this.dataList.filter((e) => e === entryName).length;
+
+      // 3. Aggiorniamo il testo del contatore
+      item.clip.find(".entry-count").text(`(${remaining})`);
+
+      // 4. Logica di Disabilitazione
+      if (remaining > 0) {
+        // Se ne rimangono, la categoria è ancora VIVA
+        item.consumed = false;
+        // Assicuriamoci che non sia disabilitata visivamente
+        item.clip.removeClass("disabled");
       } else {
-        item.clip.removeClass("highlight");
+        // Se sono finite, ORA la uccidiamo
+        item.consumed = true;
+        item.clip.addClass("disabled").removeClass("highlight");
       }
     }
   }
 
-  /**
-   * Rimuove l'evidenziazione da TUTTE le voci della lista
-   */
+  highlight(entryName, enable = true) {
+    const item = this.items.find((i) => i.entry === entryName);
+    // highlight funziona solo se non consumato
+    if (item && !item.consumed) {
+      if (enable) item.clip.addClass("highlight");
+      else item.clip.removeClass("highlight");
+    }
+  }
+
   clearHighlights() {
     this.items.forEach((item) => {
       item.clip.removeClass("highlight");
     });
+  }
+
+  // Metodo per aggiungere una categoria extra al volo
+  addExtra(entryName) {
+    // 1. Aggiungi ai dati logici
+    this.dataList.push(entryName);
+
+    // 2. Trova l'item UI
+    const item = this.items.find((i) => i.entry === entryName);
+    if (!item) return;
+
+    // 3. Calcola nuovo totale
+    const newCount = this.dataList.filter((c) => c === entryName).length;
+
+    // 4. Aggiorna UI
+    const $countEl = item.clip.find(".entry-count");
+    $countEl.text(`(${newCount})`);
+
+    // 5. ANIMAZIONE
+    $countEl.removeClass("pop-green");
+    void $countEl[0].offsetWidth;
+    $countEl.addClass("pop-green");
+
+    // 6. RIABILITAZIONE (Fix Scenario B)
+    // Se il conteggio è > 0, dobbiamo assicurarci che la categoria sia ATTIVA
+    if (newCount > 0) {
+      item.consumed = false;
+      item.clip.removeClass("disabled");
+      // Nota: non aggiungiamo .highlight qui, quello lo farà il prossimo tiro di dadi
+    }
   }
 }

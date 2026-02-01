@@ -1,6 +1,9 @@
+import jQuery from "jquery";
+
 export default class StatsPanel {
   clip = null;
   config = null;
+  rounds = []; // Salviamo il riferimento ai round per rileggerli
 
   constructor(clip) {
     this.clip = clip;
@@ -8,18 +11,37 @@ export default class StatsPanel {
 
   init(config, rounds) {
     this.config = config;
-    jQuery(".js-round-current", this.clip).text(rounds.length + 1 + "/" + config.rounds);
-    jQuery(".js-score-target", this.clip).text(config.toBeat);
-    // Segna i punti attuali
-    let currentScore = 0;
-    for (let i = 0; i < rounds.length; i++) {
-      const round = rounds[i];
-      currentScore += round.state.score;
-    }
-    jQuery(".js-score-current", this.clip).text(currentScore);
+    this.rounds = rounds; // IMPORTANTE: Salviamo il riferimento
+    this.update();
+  }
+
+  // NUOVO METODO CENTRALE
+  update() {
+    // 1. Aggiorna Numero Round
+    // rounds.length è il numero di round attuali creati
+    jQuery(".js-round-current", this.clip).text(this.rounds.length + "/" + this.config.rounds);
+
+    // 2. Aggiorna Target
+    jQuery(".js-score-target", this.clip).text(this.config.toBeat);
+
+    // 3. Calcola il Punteggio Totale della Tappa (sommando tutti i round)
+    let currentStageScore = 0;
+    this.rounds.forEach((round) => {
+      currentStageScore += round.state.score;
+    });
+
+    // Aggiorna UI Score
+    jQuery(".js-score-current", this.clip).text(currentStageScore);
   }
 
   setCurrentHand(handIndex) {
     jQuery(".js-rolls-left", this.clip).text(this.config.handsPerRound - handIndex);
+  }
+
+  // Aggiungi o sostituisci questo metodo
+  setRollsLeft(val) {
+    // Se val < 0 per qualche bug, mostra 0
+    const safeVal = val < 0 ? 0 : val;
+    jQuery(".js-rolls-left", this.clip).text(safeVal);
   }
 }

@@ -3,8 +3,9 @@ import jQuery from "jquery";
 export default class Dice {
   static faces = 6;
   value;
-  held = false; // Stato iniziale: non bloccato
+  held = false;
   btn = null;
+  $visual = null; // Salviamo il riferimento al div visuale
 
   constructor(forcedValue = null) {
     if (forcedValue !== null) {
@@ -15,8 +16,6 @@ export default class Dice {
   }
 
   roll() {
-    // Se il dado è bloccato, tecnicamente non dovrebbe essere "rollato" dal DiceManager,
-    // ma lasciamo che sia il manager a decidere se chiamare questo metodo o no.
     this.value = Math.floor(Math.random() * Dice.faces) + 1;
     return this.value;
   }
@@ -33,47 +32,52 @@ export default class Dice {
     return this.held;
   }
 
+  // Metodo per aggiornare SOLO il disegno (usato post-animazione)
+  updateFace() {
+    if (this.$visual) {
+      const asciiArt = this._generateAscii(this.value);
+      this.$visual.find("pre").text(asciiArt);
+    }
+  }
+
   show() {
-    const p = this._getAsciiPattern(this.value);
-    //const dot = "o"; // o "•"
+    const asciiArt = this._generateAscii(this.value);
 
-    // Disegno ASCII
-    let asciiArt = "┌─────┐\n";
-    asciiArt += `│ ${p[0]} │\n`;
-    asciiArt += `│ ${p[1]} │\n`;
-    asciiArt += `│ ${p[2]} │\n`;
-    asciiArt += "└─────┘";
-
-    // 1. Creiamo un container per allineare dado e bottone in verticale
     const $container = jQuery('<div class="dice-wrapper"></div>');
+    // Salviamo il riferimento a $visual
+    this.$visual = jQuery(`<div class="dice"><pre>${asciiArt}</pre></div>`);
 
-    // 2. Il dado vero e proprio
-    const $visual = jQuery(`<div class="dice"><pre>${asciiArt}</pre></div>`);
-
-    // 3. Il pulsante HOLD
     const $btn = jQuery('<button type="button" class="btn-hold">HOLD</button>');
     this.btn = $btn;
 
-    // Applichiamo lo stato visivo corrente (se stiamo ridisegnando un dado già bloccato)
     if (this.held) {
       $btn.addClass("active");
     }
 
-    // Gestione Click
     $btn.on("click", () => {
-      this.toggleHold(); // Aggiorna lo stato logico (true/false)
-      $btn.toggleClass("active"); // Aggiorna lo stato visivo (colore)
+      this.toggleHold();
+      $btn.toggleClass("active");
     });
 
-    // Assembliamo il tutto
-    $container.append($visual);
+    $container.append(this.$visual);
     $container.append($btn);
 
     return $container;
   }
 
+  // Ho estratto la generazione dell'ASCII in un helper per poterlo riusare in updateFace
+  _generateAscii(val) {
+    const p = this._getAsciiPattern(val);
+    let art = "┌─────┐\n";
+    art += `│ ${p[0]} │\n`;
+    art += `│ ${p[1]} │\n`;
+    art += `│ ${p[2]} │\n`;
+    art += "└─────┘";
+    return art;
+  }
+
   _getAsciiPattern(val) {
-    const dot = "o"; // o "•"
+    const dot = "o";
     const patterns = {
       1: ["   ", ` ${dot} `, "   "],
       2: [`${dot}  `, "   ", `  ${dot}`],

@@ -1,3 +1,5 @@
+import jQuery from "jquery";
+
 export default class ScoreSheet {
   static LOWER_CHANCE = "LowerChance";
   static LOWER_PAIR = "LowerPair";
@@ -22,7 +24,7 @@ export default class ScoreSheet {
   // --- MODIFICATO: NUOVI VALORI BILANCIATI ---
   static LOWERS_DATA = [
     // TIER 1: Safety
-    { entry: ScoreSheet.LOWER_CHANCE, name: "Chance", description: "Somma tutti i dati.", baseMult: 1, baseChips: 5 },
+    { entry: ScoreSheet.LOWER_CHANCE, name: "Chance", description: "Somma tutti i dati.", baseMult: 1, baseChips: 5, infinite: true },
     { entry: ScoreSheet.LOWER_PAIR, name: "Pair", description: "Almeno una coppia di dadi uguali.", baseMult: 2, baseChips: 10 },
 
     // TIER 2: Common
@@ -45,12 +47,54 @@ export default class ScoreSheet {
   ];
 
   static UPPERS_DATA = [
-    { entry: ScoreSheet.UPPER_ONES, name: "Ones", description: "Somma dei dadi con valore 1.", tier0: "Un tiro extra in qualunque round.", tier1: "Un tiro extra in qualunque tappa." },
-    { entry: ScoreSheet.UPPER_TWOS, name: "Twos", description: "Somma dei dadi con valore 2.", tier0: "Ogni round incrementa il valore di 1, venduta automticamente a fine tappa.", tier1: "Ogni tappa incrementa il valore di 1, venduta automaticamente a fine percorso." },
-    { entry: ScoreSheet.UPPER_THREES, name: "Threes", description: "Somma dei dadi con valore 3.", tier0: "Aggiunge 2 categorie Lower casuali alla tappa corrente.", tier1: "Aggiunge 2 categorie Lower scelte dal giocatore alla tappa corrente." },
-    { entry: ScoreSheet.UPPER_FOURS, name: "Fours", description: "Somma dei dadi con valore 4.", tier0: "+30 chips per ogni dado del valore 4 che esce in questo round.", tier1: "+30 chips per ogni dado del valore 4 che esce nel round in cui si gioca questa Upper." },
-    { entry: ScoreSheet.UPPER_FIVES, name: "Fives", description: "Somma dei dadi con valore 5.", tier0: "+5 mult al punteggio totale di questo round.", tier1: "+5 mult al punteggio totale del round in cui si gioca questa Upper." },
-    { entry: ScoreSheet.UPPER_SIXES, name: "Sixes", description: "Somma dei dadi con valore 6.", tier0: "+50 chips al punteggio totale di questo round.", tier1: "+50 chips al punteggio totale del round in cui si gioca questa Upper." },
+    {
+      entry: ScoreSheet.UPPER_ONES,
+      name: "Ones",
+      description: "Somma dei dadi con valore 1.",
+      tier0: "Un tiro extra in qualunque round di questa tappa. (Viene distrutta a fine tappa)",
+      tier1: "Un tiro extra in qualunque round di questo percorso. (Viene distrutta a fine percorso)",
+      baseValue: 1, // NUOVO: Valore Base Vendita
+    },
+    {
+      entry: ScoreSheet.UPPER_TWOS,
+      name: "Twos",
+      description: "Somma dei dadi con valore 2.",
+      tier0: "Guadagna +1$ di valore ogni round. (Venduta automaticamente a fine tappa).",
+      tier1: "Guadagna +1$ di valore ogni round. (Venduta automaticamente a fine percorso).",
+      baseValue: 0, // Speciale (valore dinamico)
+    },
+    {
+      entry: ScoreSheet.UPPER_THREES,
+      name: "Threes",
+      description: "Somma dei dadi con valore 3.",
+      tier0: "Aggiunge 2 categorie Lower casuali alla tappa corrente.",
+      tier1: "Permette di scegliere 2 categorie Lower da aggiungere alla tappa corrente.",
+      baseValue: 2, // NUOVO
+    },
+    {
+      entry: ScoreSheet.UPPER_FOURS,
+      name: "Fours",
+      description: "Somma dei dadi con valore 4.",
+      tier0: "+30 chips per ogni 4 che esce nel round (Viene distrutta a fine tappa).",
+      tier1: "+30 chips per ogni 4 che esce nel round (Viene distrutta a fine percorso).",
+      baseValue: 2, // NUOVO
+    },
+    {
+      entry: ScoreSheet.UPPER_FIVES,
+      name: "Fives",
+      description: "Somma dei dadi con valore 5.",
+      tier0: "+5 mult al punteggio totale del round. (Viene distrutta a fine tappa).",
+      tier1: "+5 mult al punteggio totale del round. (Viene distrutta a fine percorso).",
+      baseValue: 3, // NUOVO
+    },
+    {
+      entry: ScoreSheet.UPPER_SIXES,
+      name: "Sixes",
+      description: "Somma dei dadi con valore 6.",
+      tier0: "+50 chips al punteggio totale del round. (Viene distrutta a fine tappa).",
+      tier1: "+50 chips al punteggio totale del round. (Viene distrutta a fine percorso).",
+      baseValue: 2, // NUOVO
+    },
   ];
 
   static getAllLowers() {
@@ -61,91 +105,65 @@ export default class ScoreSheet {
     return [ScoreSheet.UPPER_ONES, ScoreSheet.UPPER_TWOS, ScoreSheet.UPPER_THREES, ScoreSheet.UPPER_FOURS, ScoreSheet.UPPER_FIVES, ScoreSheet.UPPER_SIXES];
   }
 
-  /**
-   * FASE 1: Valutazione della mano.
-   * Analizza i dadi e le liste disponibili per trovare le combinazioni valide.
-   * * @param {Array} dices - Array [{dice: Obj, element: jQuery}, ...]
-   * @param {Lowers} lowersManager - Istanza della classe Lowers
-   * @param {Uppers} uppersManager - Istanza della classe Uppers
-   * @returns {Array} Array di oggetti match: { category: string, type: 'lower'|'upper', score: number, description: string }
-   */
-  static evaluateHand(dices, lowersManager, uppersManager) {
-    const values = dices.map((d) => d.dice.value); // Estraiamo solo i numeri [1, 3, 3, 5, 6]
+  // ... (Resto della classe evaluateHand, _analyzeDice, _checkUpper, _checkLower invariati) ...
 
-    // Calcoliamo i dati statistici della mano (frequenze, somme, ecc.)
+  static evaluateHand(dices, lowersManager, uppersManager) {
+    const values = dices.map((d) => d.dice.value);
     const stats = ScoreSheet._analyzeDice(values);
     const validMatches = [];
 
     // --- 1. CONTROLLO UPPERS ---
-    // Iteriamo sulle entry che il giocatore HA effettivamente nella sua lista
     uppersManager.items.forEach((item) => {
-      const category = item.entry; // Es. "Ones", "Twos"
-
-      // Calcola il punteggio (o controlla validità) per questa categoria
+      if (item.consumed) return;
+      const category = item.entry;
       const result = ScoreSheet._checkUpper(category, stats);
 
       if (result.isValid) {
         validMatches.push({
           category: category,
           type: "upper",
-          score: result.score, // Es. Somma dei dadi di quel numero
+          score: result.score,
           tier: result.tier,
-          // Qui potremmo aggiungere altre info per la card (es. "Level 1")
         });
       }
     });
 
     // --- 2. CONTROLLO LOWERS ---
     lowersManager.items.forEach((item) => {
-      const category = item.entry; // Es. "Full House"
+      if (item.consumed) return;
+      const category = item.entry;
+      const results = ScoreSheet._checkLower(category, stats);
 
-      // Calcola validità per questa categoria
-      const result = ScoreSheet._checkLower(category, stats);
-
-      if (result.isValid) {
-        validMatches.push({
-          category: category,
-          type: "lower",
-          score: result.score,
-          indices: result.indices,
-          // Aggiungiamo un flag per dire se è un match "esatto" o parziale se serve
-        });
-      }
+      results.forEach((result) => {
+        if (result.isValid) {
+          validMatches.push({
+            category: category,
+            type: "lower",
+            score: result.score,
+            indices: result.indices,
+          });
+        }
+      });
     });
 
     return validMatches;
   }
 
-  // ==========================================
-  // HELPERS LOGICI (Privati)
-  // ==========================================
-
-  /**
-   * Crea un oggetto con le statistiche dei dadi per facilitare i controlli
-   */
   static _analyzeDice(values) {
-    const counts = {}; // Mappa frequenze: { 1: 0, 2: 3, ... }
+    const counts = {};
     let sum = 0;
-
-    // Inizializza a 0
     for (let i = 1; i <= 6; i++) counts[i] = 0;
-
     values.forEach((v) => {
       counts[v]++;
       sum += v;
     });
-
-    // Array delle frequenze (es. [0, 2, 3, 0, 0, 0] per un Full House di 2 e 3)
     const frequencies = Object.values(counts);
-    // Valori unici ordinati (per le scale)
     const uniqueSorted = [...new Set(values)].sort((a, b) => a - b);
-
     return { values, counts, sum, frequencies, uniqueSorted };
   }
 
   static _checkUpper(category, stats) {
     let targetNum = 0;
-
     switch (category) {
       case ScoreSheet.UPPER_ONES:
         targetNum = 1;
@@ -170,148 +188,135 @@ export default class ScoreSheet {
     }
 
     const count = stats.counts[targetNum];
-
-    // LOGICA TIER:
-    // 2 o 3 dadi = Tier 0 (Visualizzato come Tier 1)
-    // 4 o 5 dadi = Tier 1 (Visualizzato come Tier 2)
-
     if (count >= 2) {
       const tier = count >= 4 ? 1 : 0;
       return { isValid: true, score: count * targetNum, tier: tier };
     }
-
     return { isValid: false, score: 0 };
   }
 
   static _checkLower(category, stats) {
-    const f = stats.frequencies;
-    const v = stats.values; // Array originale dei valori [es. 1, 3, 3, 5, 6]
-    let isValid = false;
-    let score = 0;
-    let indices = []; // Qui salveremo gli indici dei dadi da colorare
+    const v = stats.values;
+    const results = [];
 
     switch (category) {
-      case ScoreSheet.LOWER_CHANCE:
-        isValid = true;
-        score = stats.sum;
-        indices = [0, 1, 2, 3, 4]; // Tutti validi
-        break;
-
       case ScoreSheet.LOWER_PAIR:
-        // Trova il numero che compare >= 2 volte (partendo dal più alto)
-        const pairVal = ScoreSheet._findValueByFrequency(stats, 2);
-        isValid = pairVal > 0;
-        if (isValid) {
-          score = ScoreSheet._getNOfAKindScore(stats, 2);
-          indices = ScoreSheet._getIndicesForVal(v, pairVal, 2); // Prendi 2 dadi con quel valore
-        }
-        break;
-
-      case ScoreSheet.LOWER_TWO_PAIRS:
-        // Logica un po' più complessa: trovare due numeri diversi con count >= 2
-        const pairs = [];
         for (let i = 6; i >= 1; i--) {
-          if (stats.counts[i] >= 2) pairs.push(i);
-        }
-        isValid = pairs.length >= 2;
-        if (isValid) {
-          score = stats.sum; // O regola specifica
-          // Prendi i primi due dadi della prima coppia e i primi due della seconda
-          const idx1 = ScoreSheet._getIndicesForVal(v, pairs[0], 2);
-          const idx2 = ScoreSheet._getIndicesForVal(v, pairs[1], 2);
-          indices = [...idx1, ...idx2];
-        }
-        break;
-
-      case ScoreSheet.LOWER_THREE_OF_A_KIND:
-        const threeVal = ScoreSheet._findValueByFrequency(stats, 3);
-        isValid = threeVal > 0;
-        if (isValid) {
-          score = stats.sum;
-          indices = ScoreSheet._getIndicesForVal(v, threeVal, 3);
-        }
-        break;
-
-      case ScoreSheet.LOWER_FOUR_OF_A_KIND:
-        const fourVal = ScoreSheet._findValueByFrequency(stats, 4);
-        isValid = fourVal > 0;
-        if (isValid) {
-          score = stats.sum;
-          indices = ScoreSheet._getIndicesForVal(v, fourVal, 4);
-        }
-        break;
-
-      case ScoreSheet.LOWER_FIVE_OF_A_KIND:
-        const fiveVal = ScoreSheet._findValueByFrequency(stats, 5);
-        isValid = fiveVal > 0;
-        if (isValid) {
-          score = 50;
-          indices = [0, 1, 2, 3, 4];
-        }
-        break;
-
-      case ScoreSheet.LOWER_FULL_HOUSE:
-        const tripla = ScoreSheet._findValueByFrequency(stats, 3);
-        // Cerca la coppia (che non sia la tripla stessa, nel caso di 5 uguali che valgono come full)
-        let coppia = 0;
-        for (let i = 6; i >= 1; i--) {
-          if (stats.counts[i] >= 2 && i !== tripla) coppia = i;
-        }
-
-        isValid = tripla > 0 && coppia > 0;
-        if (isValid) {
-          score = 25;
-          indices = [...ScoreSheet._getIndicesForVal(v, tripla, 3), ...ScoreSheet._getIndicesForVal(v, coppia, 2)];
+          if (stats.counts[i] >= 2) {
+            results.push({ isValid: true, score: i * 2, indices: ScoreSheet._getIndicesForVal(v, i, 2) });
+          }
         }
         break;
 
       case ScoreSheet.LOWER_SMALL_STRAIGHT:
-        const seqSmall = ScoreSheet._getStraightSequence(stats.uniqueSorted, 4);
-        isValid = seqSmall.length === 4;
-        if (isValid) {
-          score = 30;
-          indices = ScoreSheet._getIndicesForSequence(v, seqSmall);
-        }
+        const possibleStraights = [
+          [1, 2, 3, 4],
+          [2, 3, 4, 5],
+          [3, 4, 5, 6],
+        ];
+        possibleStraights.forEach((seq) => {
+          if (seq.every((num) => stats.uniqueSorted.includes(num))) {
+            results.push({ isValid: true, score: stats.sum, indices: ScoreSheet._getIndicesForSequence(v, seq) });
+          }
+        });
         break;
 
-      case ScoreSheet.LOWER_LARGE_STRAIGHT:
-        const seqLarge = ScoreSheet._getStraightSequence(stats.uniqueSorted, 5);
-        isValid = seqLarge.length === 5;
-        if (isValid) {
-          score = 40;
-          indices = ScoreSheet._getIndicesForSequence(v, seqLarge);
-        }
-        break;
+      default:
+        let isValid = false;
+        let score = 0;
+        let indices = [];
 
-      case ScoreSheet.LOWER_ALL_DIFFERENT:
-        isValid = stats.uniqueSorted.length === 5;
-        if (isValid) {
-          score = stats.sum;
-          indices = [0, 1, 2, 3, 4];
+        switch (category) {
+          case ScoreSheet.LOWER_CHANCE:
+            isValid = true;
+            score = stats.sum;
+            indices = [0, 1, 2, 3, 4];
+            break;
+          case ScoreSheet.LOWER_TWO_PAIRS:
+            const pairs = [];
+            for (let i = 6; i >= 1; i--) {
+              if (stats.counts[i] >= 2) pairs.push(i);
+            }
+            isValid = pairs.length >= 2;
+            if (isValid) {
+              score = stats.sum;
+              indices = [...ScoreSheet._getIndicesForVal(v, pairs[0], 2), ...ScoreSheet._getIndicesForVal(v, pairs[1], 2)];
+            }
+            break;
+          case ScoreSheet.LOWER_THREE_OF_A_KIND:
+            const threeVal = ScoreSheet._findValueByFrequency(stats, 3);
+            isValid = threeVal > 0;
+            if (isValid) {
+              score = stats.sum;
+              indices = ScoreSheet._getIndicesForVal(v, threeVal, 3);
+            }
+            break;
+          case ScoreSheet.LOWER_FOUR_OF_A_KIND:
+            const fourVal = ScoreSheet._findValueByFrequency(stats, 4);
+            isValid = fourVal > 0;
+            if (isValid) {
+              score = stats.sum;
+              indices = ScoreSheet._getIndicesForVal(v, fourVal, 4);
+            }
+            break;
+          case ScoreSheet.LOWER_FIVE_OF_A_KIND:
+            const fiveVal = ScoreSheet._findValueByFrequency(stats, 5);
+            isValid = fiveVal > 0;
+            if (isValid) {
+              score = stats.sum;
+              indices = [0, 1, 2, 3, 4];
+            }
+            break;
+          case ScoreSheet.LOWER_FULL_HOUSE:
+            const tripla = ScoreSheet._findValueByFrequency(stats, 3);
+            let coppia = 0;
+            for (let i = 6; i >= 1; i--) {
+              if (stats.counts[i] >= 2 && i !== tripla) coppia = i;
+            }
+            isValid = tripla > 0 && coppia > 0;
+            if (isValid) {
+              score = stats.sum;
+              indices = [...ScoreSheet._getIndicesForVal(v, tripla, 3), ...ScoreSheet._getIndicesForVal(v, coppia, 2)];
+            }
+            break;
+          case ScoreSheet.LOWER_LARGE_STRAIGHT:
+            const seqLarge = ScoreSheet._getStraightSequence(stats.uniqueSorted, 5);
+            isValid = seqLarge.length === 5;
+            if (isValid) {
+              score = stats.sum;
+              indices = ScoreSheet._getIndicesForSequence(v, seqLarge);
+            }
+            break;
+          case ScoreSheet.LOWER_ALL_DIFFERENT:
+            isValid = stats.uniqueSorted.length === 5;
+            if (isValid) {
+              score = stats.sum;
+              indices = [0, 1, 2, 3, 4];
+            }
+            break;
+          case ScoreSheet.LOWER_ALL_EVEN:
+            isValid = stats.values.every((val) => val % 2 === 0);
+            if (isValid) {
+              score = stats.sum;
+              indices = [0, 1, 2, 3, 4];
+            }
+            break;
+          case ScoreSheet.LOWER_ALL_ODD:
+            isValid = stats.values.every((val) => val % 2 !== 0);
+            if (isValid) {
+              score = stats.sum;
+              indices = [0, 1, 2, 3, 4];
+            }
+            break;
         }
-        break;
 
-      case ScoreSheet.LOWER_ALL_EVEN:
-        isValid = stats.values.every((val) => val % 2 === 0);
         if (isValid) {
-          score = stats.sum;
-          indices = [0, 1, 2, 3, 4];
-        }
-        break;
-
-      case ScoreSheet.LOWER_ALL_ODD:
-        isValid = stats.values.every((val) => val % 2 !== 0);
-        if (isValid) {
-          score = stats.sum;
-          indices = [0, 1, 2, 3, 4];
+          results.push({ isValid, score, indices });
         }
         break;
     }
-
-    return { isValid, score, indices };
+    return results;
   }
-
-  // --- NUOVI HELPER ---
 
   static _findValueByFrequency(stats, n) {
     for (let i = 6; i >= 1; i--) {
@@ -320,22 +325,17 @@ export default class ScoreSheet {
     return 0;
   }
 
-  // Restituisce gli indici dei dadi che hanno un certo valore (limitato a 'count' occorrenze)
   static _getIndicesForVal(allValues, targetVal, countNeeded) {
     const found = [];
     allValues.forEach((v, idx) => {
-      if (v === targetVal && found.length < countNeeded) {
-        found.push(idx);
-      }
+      if (v === targetVal && found.length < countNeeded) found.push(idx);
     });
     return found;
   }
 
-  // Restituisce la sequenza di numeri (es. [1,2,3,4]) se esiste
   static _getStraightSequence(uniqueSorted, lengthRequired) {
     if (uniqueSorted.length < lengthRequired) return [];
     let currentSeq = [uniqueSorted[0]];
-
     for (let i = 0; i < uniqueSorted.length - 1; i++) {
       if (uniqueSorted[i + 1] === uniqueSorted[i] + 1) {
         currentSeq.push(uniqueSorted[i + 1]);
@@ -347,13 +347,10 @@ export default class ScoreSheet {
     return currentSeq.length >= lengthRequired ? currentSeq.slice(0, lengthRequired) : [];
   }
 
-  // Mappa una sequenza di valori (es [1,2,3,4]) agli indici originali dei dadi
   static _getIndicesForSequence(allValues, sequence) {
     const indices = [];
     const usedIndices = new Set();
-
     sequence.forEach((targetVal) => {
-      // Trova il primo indice di questo valore che non abbiamo ancora usato
       const idx = allValues.findIndex((v, i) => v === targetVal && !usedIndices.has(i));
       if (idx !== -1) {
         usedIndices.add(idx);
@@ -361,33 +358,5 @@ export default class ScoreSheet {
       }
     });
     return indices;
-  }
-
-  // Calcola somma per N of a Kind (prende il valore più alto se ce ne sono più di uno)
-  static _getNOfAKindScore(stats, n) {
-    // Trova il numero più alto che appare almeno n volte
-    for (let i = 6; i >= 1; i--) {
-      if (stats.counts[i] >= n) {
-        return i * n;
-      }
-    }
-    return 0;
-  }
-
-  // Algoritmo generico per le scale
-  static _checkStraight(uniqueSorted, lengthRequired) {
-    if (uniqueSorted.length < lengthRequired) return false;
-
-    let consecutive = 1;
-    for (let i = 0; i < uniqueSorted.length - 1; i++) {
-      // Se il prossimo numero è esattamente attuale + 1
-      if (uniqueSorted[i + 1] === uniqueSorted[i] + 1) {
-        consecutive++;
-      } else {
-        consecutive = 1; // Reset se sequenza rotta
-      }
-      if (consecutive >= lengthRequired) return true;
-    }
-    return consecutive >= lengthRequired;
   }
 }
